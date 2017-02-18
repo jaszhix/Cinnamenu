@@ -94,12 +94,6 @@ const ApplicationsViewMode = {
   GRID: 1
 };
 
-const MenuButtonPosition = {
-  LEFT: 0,
-  CENTER: 1,
-  RIGHT: 2
-};
-
 /* =========================================================================
 /* name:    SearchWebBookmarks
  * @desc    Class to consolodate search of web browser(s) bookmarks
@@ -122,10 +116,18 @@ SearchWebBookmarks.prototype = {
   },
 
   bookmarksSort: function(a, b) {
-    if (a.score < b.score) return 1;
-    if (a.score > b.score) return -1;
-    if (a.name < b.name) return -1;
-    if (a.name > b.name) return 1;
+    if (a.score < b.score) {
+      return 1;
+    }
+    if (a.score > b.score) {
+      return -1;
+    }
+    if (a.name < b.name) {
+      return -1;
+    }
+    if (a.name > b.name) {
+      return 1;
+    }
     return 0;
   },
 
@@ -169,7 +171,7 @@ CategoryListButton.prototype = {
 
     this._dir = dir;
     let categoryNameText = '';
-    let categoryIconName = null;
+    //let categoryIconName = null;
 
     let icon;
 
@@ -310,11 +312,13 @@ ShortcutButton.prototype = {
         gicon: app.icon,
         icon_size: this._iconSize
       });
-      if (!this.icon) this.icon = new St.Icon({
-        icon_name: 'error',
-        icon_size: this._iconSize,
-        icon_type: St.IconType.FULLCOLOR
-      });
+      if (!this.icon) {
+        this.icon = new St.Icon({
+          icon_name: 'error',
+          icon_size: this._iconSize,
+          icon_type: St.IconType.FULLCOLOR
+        });
+      }
       this.label = new St.Label({
         text: app.name,
         style_class: 'menu-application-button-label'
@@ -325,11 +329,13 @@ ShortcutButton.prototype = {
         gicon: gicon,
         icon_size: this._iconSize
       });
-      if (!this.icon) this.icon = new St.Icon({
-        icon_name: 'error',
-        icon_size: this._iconSize,
-        icon_type: St.IconType.FULLCOLOR
-      });
+      if (!this.icon) {
+        this.icon = new St.Icon({
+          icon_name: 'error',
+          icon_size: this._iconSize,
+          icon_type: St.IconType.FULLCOLOR
+        });
+      }
       this.label = new St.Label({
         text: app.name,
         style_class: 'menu-application-button-label'
@@ -365,9 +371,10 @@ ShortcutButton.prototype = {
       function() {
         //this._removeMenuTimeout();
         Main.overview.beginItemDrag(this);
-        if (Cinnamenu.appsMenuButton) {
-          if (Cinnamenu.appsMenuButton._categoryWorkspaceMode == CategoryWorkspaceMode.CATEGORY)
-            Cinnamenu.appsMenuButton.toggleCategoryWorkspaceMode();
+        if (this._parent) {
+          if (this._parent._categoryWorkspaceMode == CategoryWorkspaceMode.CATEGORY) {
+            this._parent.toggleCategoryWorkspaceMode();
+          }
         }
       }));
     this._draggable.connect('drag-cancelled', Lang.bind(this,
@@ -430,9 +437,10 @@ ShortcutButton.prototype = {
     this.actor.remove_style_pseudo_class('pressed');
     this.actor.remove_style_class_name('selected');
 
-    if (Cinnamenu.appsMenuButton) {
-      if (Cinnamenu.appsMenuButton.menu.isOpen)
-        Cinnamenu.appsMenuButton.menu.toggle();
+    if (this._parent.appsMenuButton) {
+      if (this._parent.menu.isOpen) {
+        this._parent.menu.toggle();
+      }
     }
   }
 };
@@ -451,6 +459,7 @@ function AppListButton() {
 AppListButton.prototype = {
 
   _init: function(_parent, app, appType) {
+    this._parent = _parent;
     this._applet = _parent._applet;
     this._app = app;
     this._type = appType;
@@ -477,11 +486,13 @@ AppListButton.prototype = {
         gicon: app.icon,
         icon_size: this._iconSize
       });
-      if (!this.icon) this.icon = new St.Icon({
-        icon_name: 'error',
-        icon_size: this._iconSize,
-        icon_type: St.IconType.FULLCOLOR
-      });
+      if (!this.icon) {
+        this.icon = new St.Icon({
+          icon_name: 'error',
+          icon_size: this._iconSize,
+          icon_type: St.IconType.FULLCOLOR
+        });
+      }
       this.label = new St.Label({
         text: app.name,
         style_class: 'menu-application-button-label'
@@ -492,11 +503,13 @@ AppListButton.prototype = {
         gicon: gicon,
         icon_size: this._iconSize
       });
-      if (!this.icon) this.icon = new St.Icon({
-        icon_name: 'error',
-        icon_size: this._iconSize,
-        icon_type: St.IconType.FULLCOLOR
-      });
+      if (!this.icon) {
+        this.icon = new St.Icon({
+          icon_name: 'error',
+          icon_size: this._iconSize,
+          icon_type: St.IconType.FULLCOLOR
+        });
+      }
       this.label = new St.Label({
         text: app.name,
         style_class: 'menu-application-button-label'
@@ -558,229 +571,9 @@ AppListButton.prototype = {
       function() {
         //this._removeMenuTimeout();
         Main.overview.beginItemDrag(this);
-        if (Cinnamenu.appsMenuButton) {
-          if (Cinnamenu.appsMenuButton._categoryWorkspaceMode == CategoryWorkspaceMode.CATEGORY)
-            Cinnamenu.appsMenuButton.toggleCategoryWorkspaceMode();
-        }
-      }));
-    this._draggable.connect('drag-cancelled', Lang.bind(this,
-      function() {
-        Main.overview.cancelledItemDrag(this);
-      }));
-    this._draggable.connect('drag-end', Lang.bind(this,
-      function() {
-        Main.overview.endItemDrag(this);
-      }));
-
-    // Check if running state
-    this._dot.opacity = 0;
-    this._onStateChanged();
-  },
-
-  _onTouchEvent: function(actor, event) {
-    return Clutter.EVENT_PROPAGATE;
-  },
-
-  _onStateChanged: function() {
-    if (this._type == ApplicationType.APPLICATION) {
-      if (this._app.state != Cinnamon.AppState.STOPPED) {
-        this._dot.opacity = 255;
-      } else {
-        this._dot.opacity = 0;
-      }
-    }
-  },
-
-  getDragActor: function() {
-    let appIcon;
-    if (this._type == ApplicationType.APPLICATION) {
-      appIcon = this._app.create_icon_texture(this._iconSize);
-    } else if (this._type == ApplicationType.PLACE) {
-      appIcon = new St.Icon({
-        gicon: this._app.icon,
-        icon_size: this._iconSize
-      });
-    } else if (this._type == ApplicationType.RECENT) {
-      let gicon = Gio.content_type_get_icon(this._app.mime);
-      appIcon = new St.Icon({
-        gicon: gicon,
-        icon_size: this._iconSize
-      });
-    }
-    return appIcon;
-  },
-
-  // Returns the original actor that should align with the actor
-  // we show as the item is being dragged.
-  getDragActorSource: function() {
-    return this.icon;
-  },
-
-  shellWorkspaceLaunch: function(params) {
-    params = Params.parse(params, {
-      workspace: -1,
-      timestamp: 0
-    });
-
-    if (this._type == ApplicationType.APPLICATION) {
-      this._app.open_new_window(params.workspace);
-    } else if (this._type == ApplicationType.PLACE) {
-      if (this._app.uri) {
-        this._app.app.launch_uris([this._app.uri], null);
-      } else {
-        this._app.launch();
-      }
-    } else if (this._type == ApplicationType.RECENT) {
-      Gio.app_info_launch_default_for_uri(this._app.uri, global.create_app_launch_context(0, -1));
-    }
-
-    this.actor.remove_style_pseudo_class('pressed');
-    this.actor.remove_style_class_name('selected');
-
-    if (Cinnamenu.appsMenuButton) {
-      if (Cinnamenu.appsMenuButton.menu.isOpen) {
-        Cinnamenu.appsMenuButton.menu.toggle();
-      }
-    }
-  }
-};
-Signals.addSignalMethods(AppListButton.prototype);
-
-
-/* =========================================================================
-/* name:    AppGridButton
- * @desc    A button with an icon and label that holds app info for various
- * @desc    types of sources (application, places, recent)
- * ========================================================================= */
-
-function AppGridButton() {
-  this._init.apply(this, arguments);
-}
-
-AppGridButton.prototype = {
-  _init: function(_parent, app, appType, includeText) {
-    this._applet = _parent._applet
-    this._app = app;
-    this._type = appType;
-    this._stateChangedId = 0;
-    let styleButton = 'popup-menu-item menu-application-button';
-
-    let styleLabel = 'menu-application-button-label';
-    if (this._applet.appsGridColumnCount == 3) {
-      styleButton += ' col3';
-    } else if (this._applet.appsGridColumnCount == 4) {
-      styleButton += ' col4';
-    } else if (this._applet.appsGridColumnCount == 5) {
-      styleButton += ' col5';
-    } else if (this._applet.appsGridColumnCount == 6) {
-      styleButton += ' col6';
-    } else if (this._applet.appsGridColumnCount == 7) {
-      styleButton += ' col7';
-    }
-    if (this._applet.hideCategories) {
-      styleButton += ' no-categories';
-      styleLabel += ' no-categories';
-    }
-
-    this.actor = new St.Button({
-      reactive: true,
-      style_class: styleButton,
-      x_align: St.Align.MIDDLE,
-      y_align: St.Align.MIDDLE
-    });
-    this.actor._delegate = this;
-    this._iconSize = (this._applet.appsGridIconSize > 0) ? this._applet.appsGridIconSize : 64;
-
-    // appType 0 = application, appType 1 = place, appType 2 = recent
-    if (appType == ApplicationType.APPLICATION) {
-      this.icon = app.create_icon_texture(this._iconSize);
-      this.label = new St.Label({
-        text: app.get_name(),
-        style_class: styleLabel
-      });
-    } else if (appType == ApplicationType.PLACE) {
-      this.icon = new St.Icon({
-        gicon: app.icon,
-        icon_size: this._iconSize
-      });
-      if (!this.icon) this.icon = new St.Icon({
-        icon_name: 'error',
-        icon_size: this._iconSize,
-        icon_type: St.IconType.FULLCOLOR
-      });
-      this.label = new St.Label({
-        text: app.name,
-        style_class: styleLabel
-      });
-    } else if (appType == ApplicationType.RECENT) {
-      let gicon = Gio.content_type_get_icon(app.mime);
-      this.icon = new St.Icon({
-        gicon: gicon,
-        icon_size: this._iconSize
-      });
-      if (!this.icon) this.icon = new St.Icon({
-        icon_name: 'error',
-        icon_size: this._iconSize,
-        icon_type: St.IconType.FULLCOLOR
-      });
-      this.label = new St.Label({
-        text: app.name,
-        style_class: styleLabel
-      });
-    }
-
-    this._dot = new St.Widget({
-      style: 'width: 10px; height: 3px; background-color: #FFFFFF; margin-bottom: 2px;',
-      layout_manager: new Clutter.BinLayout(),
-      x_expand: true,
-      y_expand: true,
-      x_align: Clutter.ActorAlign.CENTER,
-      y_align: Clutter.ActorAlign.END
-    });
-
-    this.buttonbox = new St.BoxLayout({
-      vertical: true
-    });
-    this.buttonbox.add(this.icon, {
-      x_fill: false,
-      y_fill: false,
-      x_align: St.Align.MIDDLE,
-      y_align: St.Align.START
-    });
-    if (includeText) {
-      // Use pango to wrap label text
-      //this.label.clutter_text.line_wrap_mode = Pango.WrapMode.WORD;
-      //this.label.clutter_text.line_wrap = true;
-      this.buttonbox.add(this.label, {
-        x_fill: false,
-        y_fill: true,
-        x_align: St.Align.MIDDLE,
-        y_align: St.Align.MIDDLE
-      });
-    }
-    this.buttonbox.add(this._dot, {
-      x_fill: false,
-      y_fill: false,
-      x_align: St.Align.MIDDLE,
-      y_align: St.Align.START
-    });
-    this.actor.set_child(this.buttonbox);
-
-    // Connect signals
-    this.actor.connect('touch-event', Lang.bind(this, this._onTouchEvent));
-    if (appType == ApplicationType.APPLICATION) {
-      this._stateChangedId = this._app.connect('notify::state', Lang.bind(this, this._onStateChanged));
-    }
-
-    // Connect drag-n-drop signals
-    this._draggable = DND.makeDraggable(this.actor);
-    this._draggable.connect('drag-begin', Lang.bind(this,
-      function() {
-        //this._removeMenuTimeout();
-        Main.overview.beginItemDrag(this);
-        if (Cinnamenu.appsMenuButton) {
-          if (Cinnamenu.appsMenuButton._categoryWorkspaceMode == CategoryWorkspaceMode.CATEGORY) {
-            Cinnamenu.appsMenuButton.toggleCategoryWorkspaceMode();
+        if (this._parent) {
+          if (this._parent._categoryWorkspaceMode == CategoryWorkspaceMode.CATEGORY) {
+            this._parent.toggleCategoryWorkspaceMode();
           }
         }
       }));
@@ -858,9 +651,235 @@ AppGridButton.prototype = {
     this.actor.remove_style_pseudo_class('pressed');
     this.actor.remove_style_class_name('selected');
 
-    if (Cinnamenu.appsMenuButton) {
-      if (Cinnamenu.appsMenuButton.menu.isOpen)
-        Cinnamenu.appsMenuButton.menu.toggle();
+    if (this._parent) {
+      if (this._parent.menu.isOpen) {
+        this._parent.menu.toggle();
+      }
+    }
+  }
+};
+Signals.addSignalMethods(AppListButton.prototype);
+
+
+/* =========================================================================
+/* name:    AppGridButton
+ * @desc    A button with an icon and label that holds app info for various
+ * @desc    types of sources (application, places, recent)
+ * ========================================================================= */
+
+function AppGridButton() {
+  this._init.apply(this, arguments);
+}
+
+AppGridButton.prototype = {
+  _init: function(_parent, app, appType, includeText) {
+    this._applet = _parent._applet
+    this._app = app;
+    this._type = appType;
+    this._stateChangedId = 0;
+    let styleButton = 'popup-menu-item menu-application-button';
+
+    let styleLabel = 'menu-application-button-label';
+    if (this._applet.appsGridColumnCount == 3) {
+      styleButton += ' col3';
+    } else if (this._applet.appsGridColumnCount == 4) {
+      styleButton += ' col4';
+    } else if (this._applet.appsGridColumnCount == 5) {
+      styleButton += ' col5';
+    } else if (this._applet.appsGridColumnCount == 6) {
+      styleButton += ' col6';
+    } else if (this._applet.appsGridColumnCount == 7) {
+      styleButton += ' col7';
+    }
+    if (this._applet.hideCategories) {
+      styleButton += ' no-categories';
+      styleLabel += ' no-categories';
+    }
+
+    this.actor = new St.Button({
+      reactive: true,
+      style_class: styleButton,
+      x_align: St.Align.MIDDLE,
+      y_align: St.Align.MIDDLE
+    });
+    this.actor._delegate = this;
+    this._iconSize = (this._applet.appsGridIconSize > 0) ? this._applet.appsGridIconSize : 64;
+
+    // appType 0 = application, appType 1 = place, appType 2 = recent
+    if (appType == ApplicationType.APPLICATION) {
+      this.icon = app.create_icon_texture(this._iconSize);
+      this.label = new St.Label({
+        text: app.get_name(),
+        style_class: styleLabel
+      });
+    } else if (appType == ApplicationType.PLACE) {
+      this.icon = new St.Icon({
+        gicon: app.icon,
+        icon_size: this._iconSize
+      });
+      if (!this.icon) {
+        this.icon = new St.Icon({
+          icon_name: 'error',
+          icon_size: this._iconSize,
+          icon_type: St.IconType.FULLCOLOR
+        });
+      }
+      this.label = new St.Label({
+        text: app.name,
+        style_class: styleLabel
+      });
+    } else if (appType == ApplicationType.RECENT) {
+      let gicon = Gio.content_type_get_icon(app.mime);
+      this.icon = new St.Icon({
+        gicon: gicon,
+        icon_size: this._iconSize
+      });
+      if (!this.icon) {
+        this.icon = new St.Icon({
+          icon_name: 'error',
+          icon_size: this._iconSize,
+          icon_type: St.IconType.FULLCOLOR
+        });
+      }
+      this.label = new St.Label({
+        text: app.name,
+        style_class: styleLabel
+      });
+    }
+
+    this._dot = new St.Widget({
+      style: 'width: 10px; height: 3px; background-color: #FFFFFF; margin-bottom: 2px;',
+      layout_manager: new Clutter.BinLayout(),
+      x_expand: true,
+      y_expand: true,
+      x_align: Clutter.ActorAlign.CENTER,
+      y_align: Clutter.ActorAlign.END
+    });
+
+    this.buttonbox = new St.BoxLayout({
+      vertical: true
+    });
+    this.buttonbox.add(this.icon, {
+      x_fill: false,
+      y_fill: false,
+      x_align: St.Align.MIDDLE,
+      y_align: St.Align.START
+    });
+    if (includeText) {
+      // Use pango to wrap label text
+      //this.label.clutter_text.line_wrap_mode = Pango.WrapMode.WORD;
+      //this.label.clutter_text.line_wrap = true;
+      this.buttonbox.add(this.label, {
+        x_fill: false,
+        y_fill: true,
+        x_align: St.Align.MIDDLE,
+        y_align: St.Align.MIDDLE
+      });
+    }
+    this.buttonbox.add(this._dot, {
+      x_fill: false,
+      y_fill: false,
+      x_align: St.Align.MIDDLE,
+      y_align: St.Align.START
+    });
+    this.actor.set_child(this.buttonbox);
+
+    // Connect signals
+    this.actor.connect('touch-event', Lang.bind(this, this._onTouchEvent));
+    if (appType == ApplicationType.APPLICATION) {
+      this._stateChangedId = this._app.connect('notify::state', Lang.bind(this, this._onStateChanged));
+    }
+
+    // Connect drag-n-drop signals
+    this._draggable = DND.makeDraggable(this.actor);
+    this._draggable.connect('drag-begin', Lang.bind(this,
+      function() {
+        //this._removeMenuTimeout();
+        Main.overview.beginItemDrag(this);
+        if (this._parent) {
+          if (this._parent._categoryWorkspaceMode == CategoryWorkspaceMode.CATEGORY) {
+            this._parent.toggleCategoryWorkspaceMode();
+          }
+        }
+      }));
+    this._draggable.connect('drag-cancelled', Lang.bind(this,
+      function() {
+        Main.overview.cancelledItemDrag(this);
+      }));
+    this._draggable.connect('drag-end', Lang.bind(this,
+      function() {
+        Main.overview.endItemDrag(this);
+      }));
+
+    // Check if running state
+    this._dot.opacity = 0;
+    this._onStateChanged();
+  },
+
+  _onTouchEvent: function(actor, event) {
+    return Clutter.EVENT_PROPAGATE;
+  },
+
+  _onStateChanged: function() {
+    if (this._type == ApplicationType.APPLICATION) {
+      if (this._app.state != Cinnamon.AppState.STOPPED) {
+        this._dot.opacity = 255;
+      } else {
+        this._dot.opacity = 0;
+      }
+    }
+  },
+
+  getDragActor: function() {
+    let appIcon;
+    if (this._type == ApplicationType.APPLICATION) {
+      appIcon = this._app.create_icon_texture(this._iconSize);
+    } else if (this._type == ApplicationType.PLACE) {
+      appIcon = new St.Icon({
+        gicon: this._app.icon,
+        icon_size: this._iconSize
+      });
+    } else if (this._type == ApplicationType.RECENT) {
+      let gicon = Gio.content_type_get_icon(this._app.mime);
+      appIcon = new St.Icon({
+        gicon: gicon,
+        icon_size: this._iconSize
+      });
+    }
+    return appIcon;
+  },
+
+  // Returns the original actor that should align with the actor
+  // we show as the item is being dragged.
+  getDragActorSource: function() {
+    return this.icon;
+  },
+
+  shellWorkspaceLaunch: function(params) {
+    params = Params.parse(params, {
+      workspace: -1,
+      timestamp: 0
+    });
+
+    if (this._type == ApplicationType.APPLICATION) {
+      this._app.open_new_window(params.workspace);
+    } else if (this._type == ApplicationType.PLACE) {
+      if (this._app.uri) {
+        this._app.app.launch_uris([this._app.uri], null);
+      } else {
+        this._app.launch();
+      }
+    } else if (this._type == ApplicationType.RECENT) {
+      Gio.app_info_launch_default_for_uri(this._app.uri, global.create_app_launch_context(0, -1));
+    }
+
+    this.actor.remove_style_pseudo_class('pressed');
+    this.actor.remove_style_class_name('selected');
+
+    if (this._parent) {
+      if (this._parent.menu.isOpen) {
+        this._parent.menu.toggle();
+      }
     }
   }
 };
@@ -1218,7 +1237,7 @@ PanelMenuButton.prototype = {
 
   _setButtonHeight: function(button, height) {
     let adjustedHeight = height;
-    let buttonMargin, buttonBorder, buttonPadding;
+    let buttonBorder, buttonPadding;
     if (button.get_stage()) {
       let themeNode = button.get_theme_node();
       buttonBorder = {
@@ -1240,7 +1259,7 @@ PanelMenuButton.prototype = {
 
   toggleCategoryWorkspaceMode: function(mode) {
     let toMode = null;
-    if (mode != undefined) {
+    if (mode !== undefined) {
       toMode = mode;
     } else {
       if (this._categoryWorkspaceMode == CategoryWorkspaceMode.CATEGORY) {
@@ -1255,7 +1274,7 @@ PanelMenuButton.prototype = {
       this.categoriesBox.show();
     } else if (toMode == CategoryWorkspaceMode.WORKSPACE) {
       this._categoryWorkspaceMode = CategoryWorkspaceMode.WORKSPACE;
-      if (this._widthCategoriesBox == 0) {
+      if (this._widthCategoriesBox === 0) {
         this._widthCategoriesBox = this.categoriesBox.width;
       }
       this.categoriesBox.hide();
@@ -1380,7 +1399,7 @@ PanelMenuButton.prototype = {
     if (this._activeContainer == this.applicationsListBox || this._activeContainer == this.applicationsGridBox) {
 
       // reset active container
-      this._activeContainer = (mode == 0) ? this.applicationsListBox : this.applicationsGridBox;
+      this._activeContainer = (mode === 0) ? this.applicationsListBox : this.applicationsGridBox;
       this._selectedItemIndex = -1;
 
       // reset scroll to top
@@ -1400,7 +1419,9 @@ PanelMenuButton.prototype = {
         let actor = categoryActors[i];
         if (selectedCategory && (actor == selectedCategory.actor)) {
           actor.add_style_class_name('popup-sub-menu');
-          if (this._style1) actor.set_style(this._style1);
+          if (this._style1) {
+            actor.set_style(this._style1);
+          }
         } else {
           actor.remove_style_class_name('popup-sub-menu');
           actor.set_style('border-color: none');
@@ -1433,8 +1454,9 @@ PanelMenuButton.prototype = {
   },
 
   _clearActiveContainerSelections: function(selectedContainerActor) {
-    if (!this._activeContainer)
+    if (!this._activeContainer) {
       return;
+    }
 
     // Deal with extensionPreferences actor separately
     // because it's not in any of the activeContainer objects
@@ -1448,22 +1470,25 @@ PanelMenuButton.prototype = {
     }
 
     // Return if activeContainer has no children
-    if (!this._activeContainer.get_children)
+    if (!this._activeContainer.get_children) {
       return;
+    }
 
     this._activeContainer.get_children().forEach(function(actor) {
       if (selectedContainerActor) {
         if (selectedContainerActor && (actor == selectedContainerActor)) {
           actor.add_style_class_name('selected');
-          if (actor._delegate && actor._delegate.select)
+          if (actor._delegate && actor._delegate.select) {
             actor._delegate.select();
+          }
         } else {
           actor.remove_style_class_name('selected');
         }
       } else {
         actor.remove_style_class_name('selected');
-        if (actor._delegate && actor._delegate.unSelect)
+        if (actor._delegate && actor._delegate.unSelect) {
           actor._delegate.unSelect();
+        }
       }
     });
   },
@@ -1502,8 +1527,9 @@ PanelMenuButton.prototype = {
     }
 
     // Don't want to clear selected category if just refreshing because of view mode change
-    if (refresh)
+    if (refresh) {
       return;
+    }
 
     let categoryActors = this.categoriesBox.get_children();
     if (categoryActors) {
@@ -1511,7 +1537,9 @@ PanelMenuButton.prototype = {
         let actor = categoryActors[i];
         if (selectedCategory && (actor == selectedCategory.actor)) {
           actor.add_style_class_name('popup-sub-menu');
-          if (this._style1) actor.set_style(this._style1);
+          if (this._style1) {
+            actor.set_style(this._style1);
+          }
         } else {
           actor.remove_style_class_name('popup-sub-menu');
           actor.set_style('border-color: none');
@@ -1570,7 +1598,6 @@ PanelMenuButton.prototype = {
     this._searchWebErrorsShown = true;
 
     let res = [];
-    let searchResults = [];
     let bookmarks = [];
 
     bookmarks = bookmarks.concat(Chromium.bookmarks);
@@ -1602,8 +1629,9 @@ PanelMenuButton.prototype = {
     let devices = this.placesManager.getMounts();
     let res = [];
     for (let i = 0, len = devices.length; i < len; i++) {
-      if (!pattern || devices[i].name.toLowerCase().indexOf(pattern) !== -1)
+      if (!pattern || devices[i].name.toLowerCase().indexOf(pattern) !== -1) {
         res.push(devices[i]);
+      }
     }
     return res;
   },
@@ -1660,7 +1688,7 @@ PanelMenuButton.prototype = {
       res = [];
       for (let i = 0, len = applist.length; i < len; i++) {
         let app = applist[i];
-        let info = Gio.DesktopAppInfo.new(app.get_id());
+        //let info = Gio.DesktopAppInfo.new(app.get_id());
         if (kmp(Util.latinise(app.get_name().toLowerCase()), pattern) !== -1) {
           res.push(app);
         }
@@ -1683,8 +1711,9 @@ PanelMenuButton.prototype = {
   },
 
   _adjustThemeForCompatibility: function() {
+    return false; // TBD - this function breaks the top button box styling.
     // Certain menu objects get color, border, etc from theme
-    let themeBorderColor = null,
+    /*let themeBorderColor = null,
       themeBorderColorAlpha = '1';
     let themeBorderColor2 = null,
       themeBorderColor2Alpha = '1';
@@ -1750,8 +1779,7 @@ PanelMenuButton.prototype = {
         themeButtonTextColor2Alpha = themeButtonTextColor2.alpha / 255;
       }
     }
-    return false;
-    Main._logInfo(Object.keys(this._dummySeparator))
+    
     if (this._dummySeparator.actor.get_stage()) {
       let themeNode = this._dummySeparator.actor.get_theme_node();
       themeBorderColor3 = themeNode.get_border_color(St.Side.TOP);
@@ -1862,7 +1890,7 @@ PanelMenuButton.prototype = {
     this.bottomPane.set_style(null);
     this.applicationsBoxWrapper.set_style(null);
     this.searchBox.set_style(null);
-    return true;
+    return true;*/
   },
 
   _calculateApplicationsBoxWidth: function() {
@@ -1888,7 +1916,7 @@ PanelMenuButton.prototype = {
     };
     if (this.userGroupBox.get_stage()) {
       let themeNode = this.userGroupBox.get_theme_node();
-      /*userGroupBoxMargin = {
+      /*userGroupBoxMargin = { // Not supported in Cinnamon
           left: themeNode.get_margin(St.Side.LEFT),
           top: themeNode.get_margin(St.Side.TOP),
           bottom: themeNode.get_margin(St.Side.BOTTOM),
@@ -1935,7 +1963,7 @@ PanelMenuButton.prototype = {
     };
     if (this.searchBox.get_stage()) {
       let themeNode = this.searchBox.get_theme_node();
-      /*searchBoxMargin = {
+      /*searchBoxMargin = { // Not supported in Cinnamon
           left: themeNode.get_margin(St.Side.LEFT),
           top: themeNode.get_margin(St.Side.TOP),
           bottom: themeNode.get_margin(St.Side.BOTTOM),
@@ -1978,7 +2006,7 @@ PanelMenuButton.prototype = {
     };
     if (this.viewModeBoxWrapper.get_stage()) {
       let themeNode = this.viewModeBoxWrapper.get_theme_node();
-      /*viewModeBoxWrapperMargin = {
+      /*viewModeBoxWrapperMargin = { // Not supported in Cinnamon
           left: themeNode.get_margin(St.Side.LEFT),
           top: themeNode.get_margin(St.Side.TOP),
           bottom: themeNode.get_margin(St.Side.BOTTOM),
@@ -2059,7 +2087,7 @@ PanelMenuButton.prototype = {
         gridLayout.pack(appGridButton.actor, 0, 0);
         if (appGridButton.actor.get_stage()) {
           let themeNode = appGridButton.actor.get_theme_node();
-          /*buttonMargin = {
+          /*buttonMargin = { // Not supported in Cinnamon
               left: themeNode.get_margin(St.Side.LEFT),
               top: themeNode.get_margin(St.Side.TOP),
               bottom: themeNode.get_margin(St.Side.BOTTOM),
@@ -2168,7 +2196,7 @@ PanelMenuButton.prototype = {
     let appType;
 
     // variables for icon grid layout
-    let page = 0;
+    //let page = 0;
     let column = 0;
     let rownum = 0;
 
@@ -2178,6 +2206,61 @@ PanelMenuButton.prototype = {
       this._applications = [];
     }
 
+    let appButtonEnterEvent = (appListButton, appType)=>{
+      appListButton.actor.connect('enter-event', Lang.bind(this, function() {
+        appListButton.actor.add_style_class_name('menu-application-button-selected');
+        if (appType === ApplicationType.APPLICATION) {
+          this.selectedAppTitle.set_text(appListButton._app.get_name());
+          if (appListButton._app.get_description()) {
+            this.selectedAppDescription.set_text(appListButton._app.get_description());
+          } else {
+            this.selectedAppDescription.set_text('');
+          }
+        } else {
+          this.selectedAppTitle.set_text(appListButton._app.name);
+          if (appListButton._app.description) {
+            this.selectedAppDescription.set_text(appListButton._app.description);
+          } else {
+            this.selectedAppDescription.set_text('');
+          }
+        }
+      }));
+    };
+
+    let appButtonLeaveEvent = (appListButton)=>{
+      appListButton.actor.connect('leave-event', Lang.bind(this, function() {
+        appListButton.actor.remove_style_class_name('menu-application-button-selected');
+        this.selectedAppTitle.set_text('');
+        this.selectedAppDescription.set_text('');
+      }));
+    };
+
+    let appButtonButtonPressEvent = (appListButton)=>{
+      appListButton.actor.connect('button-press-event', Lang.bind(this, function() {
+        appListButton.actor.add_style_pseudo_class('pressed');
+      }));
+    };
+
+    let appButtonButtonReleaseEvent = (appListButton, appType, app)=>{
+      appListButton.actor.connect('button-release-event', Lang.bind(this, function() {
+        appListButton.actor.remove_style_pseudo_class('pressed');
+        this.selectedAppTitle.set_text('');
+        this.selectedAppDescription.set_text('');
+        if (appType === ApplicationType.APPLICATION) {
+          appListButton._app.open_new_window(-1);
+        } else if (appType === ApplicationType.PLACE) {
+          if (app.uri) {
+            appListButton._app.app.launch_uris([app.uri], null);
+          } else {
+            appListButton._app.launch();
+          }
+        } else if (appType === ApplicationType.RECENT) {
+          Gio.app_info_launch_default_for_uri(app.uri, global.create_app_launch_context(0, -1));
+        }
+        this.menu.close();
+      }));
+    };
+
     if (apps) {
       appType = ApplicationType.APPLICATION;
       for (let i = 0, len = apps.length; i < len; i++) {
@@ -2186,55 +2269,19 @@ PanelMenuButton.prototype = {
         if (refresh || !this._applications[app]) {
           if (viewMode == ApplicationsViewMode.LIST) { // ListView
             let appListButton = new AppListButton(this, app, appType);
-            appListButton.actor.connect('enter-event', Lang.bind(this, function() {
-              appListButton.actor.add_style_class_name('menu-application-button-selected');
-              this.selectedAppTitle.set_text(appListButton._app.get_name());
-              if (appListButton._app.get_description()) this.selectedAppDescription.set_text(appListButton._app
-                .get_description());
-              else this.selectedAppDescription.set_text('');
-            }));
-            appListButton.actor.connect('leave-event', Lang.bind(this, function() {
-              appListButton.actor.remove_style_class_name('menu-application-button-selected');
-              this.selectedAppTitle.set_text('');
-              this.selectedAppDescription.set_text('');
-            }));
-            appListButton.actor.connect('button-press-event', Lang.bind(this, function() {
-              appListButton.actor.add_style_pseudo_class('pressed');
-            }));
-            appListButton.actor.connect('button-release-event', Lang.bind(this, function() {
-              appListButton.actor.remove_style_pseudo_class('pressed');
-              this.selectedAppTitle.set_text('');
-              this.selectedAppDescription.set_text('');
-              appListButton._app.open_new_window(-1);
-              this.menu.close();
-            }));
+            appButtonEnterEvent(appListButton, appType);
+            appButtonLeaveEvent(appListButton)
+            appButtonButtonPressEvent(appListButton);
+            appButtonButtonReleaseEvent(appListButton, appType, app);
             this.applicationsListBox.add_actor(appListButton.actor);
           } else { // GridView
             let includeTextLabel = (this._applet.appsGridLabelWidth > 0) ? true : false;
             let appGridButton = new AppGridButton(this, app, appType, includeTextLabel);
             appGridButton.buttonbox.width = this._appGridButtonWidth;
-            appGridButton.actor.connect('enter-event', Lang.bind(this, function() {
-              appGridButton.actor.add_style_class_name('menu-application-button-selected');
-              this.selectedAppTitle.set_text(appGridButton._app.get_name());
-              if (appGridButton._app.get_description()) this.selectedAppDescription.set_text(appGridButton._app
-                .get_description());
-              else this.selectedAppDescription.set_text('');
-            }));
-            appGridButton.actor.connect('leave-event', Lang.bind(this, function() {
-              appGridButton.actor.remove_style_class_name('menu-application-button-selected');
-              this.selectedAppTitle.set_text('');
-              this.selectedAppDescription.set_text('');
-            }));
-            appGridButton.actor.connect('button-press-event', Lang.bind(this, function() {
-              appGridButton.actor.add_style_pseudo_class('pressed');
-            }));
-            appGridButton.actor.connect('button-release-event', Lang.bind(this, function() {
-              appGridButton.actor.remove_style_pseudo_class('pressed');
-              this.selectedAppTitle.set_text('');
-              this.selectedAppDescription.set_text('');
-              appGridButton._app.open_new_window(-1);
-              this.menu.close();
-            }));
+            appButtonEnterEvent(appGridButton, appType);
+            appButtonLeaveEvent(appGridButton)
+            appButtonButtonPressEvent(appGridButton);
+            appButtonButtonReleaseEvent(appGridButton, appType, app);
             let gridLayout = this.applicationsGridBox.layout_manager;
             gridLayout.pack(appGridButton.actor, column, rownum);
             column++;
@@ -2244,7 +2291,9 @@ PanelMenuButton.prototype = {
             }
           }
         }
-        if (!refresh) this._applications[app] = app;
+        if (!refresh) {
+          this._applications[app] = app;
+        }
       }
     }
 
@@ -2263,60 +2312,18 @@ PanelMenuButton.prototype = {
         if (refresh || !this._places[app.name]) {
           if (viewMode == ApplicationsViewMode.LIST) { // ListView
             let appListButton = new AppListButton(this, app, appType);
-            appListButton.actor.connect('enter-event', Lang.bind(this, function() {
-              appListButton.actor.add_style_class_name('menu-application-button-selected');
-              this.selectedAppTitle.set_text(appListButton._app.name);
-              if (appListButton._app.description) this.selectedAppDescription.set_text(appListButton._app.description);
-              else this.selectedAppDescription.set_text('');
-            }));
-            appListButton.actor.connect('leave-event', Lang.bind(this, function() {
-              appListButton.actor.remove_style_class_name('menu-application-button-selected');
-              this.selectedAppTitle.set_text('');
-              this.selectedAppDescription.set_text('');
-            }));
-            appListButton.actor.connect('button-press-event', Lang.bind(this, function() {
-              appListButton.actor.add_style_pseudo_class('pressed');
-            }));
-            appListButton.actor.connect('button-release-event', Lang.bind(this, function() {
-              appListButton.actor.remove_style_pseudo_class('pressed');
-              this.selectedAppTitle.set_text('');
-              this.selectedAppDescription.set_text('');
-              if (app.uri) {
-                appListButton._app.app.launch_uris([app.uri], null);
-              } else {
-                appListButton._app.launch();
-              }
-              this.menu.close();
-            }));
+            appButtonEnterEvent(appListButton, appType);
+            appButtonLeaveEvent(appListButton)
+            appButtonButtonPressEvent(appListButton);
+            appButtonButtonReleaseEvent(appListButton, appType, app);
             this.applicationsListBox.add_actor(appListButton.actor);
           } else { // GridView
             let appGridButton = new AppGridButton(this, app, appType, true);
             appGridButton.buttonbox.width = this._appGridButtonWidth;
-            appGridButton.actor.connect('enter-event', Lang.bind(this, function() {
-              appGridButton.actor.add_style_class_name('menu-application-button-selected');
-              this.selectedAppTitle.set_text(appGridButton._app.name);
-              if (appGridButton._app.description) this.selectedAppDescription.set_text(appGridButton._app.description);
-              else this.selectedAppDescription.set_text('');
-            }));
-            appGridButton.actor.connect('leave-event', Lang.bind(this, function() {
-              appGridButton.actor.remove_style_class_name('menu-application-button-selected');
-              this.selectedAppTitle.set_text('');
-              this.selectedAppDescription.set_text('');
-            }));
-            appGridButton.actor.connect('button-press-event', Lang.bind(this, function() {
-              appGridButton.actor.add_style_pseudo_class('pressed');
-            }));
-            appGridButton.actor.connect('button-release-event', Lang.bind(this, function() {
-              appGridButton.actor.remove_style_pseudo_class('pressed');
-              this.selectedAppTitle.set_text('');
-              this.selectedAppDescription.set_text('');
-              if (app.uri) {
-                appGridButton._app.app.launch_uris([app.uri], null);
-              } else {
-                appGridButton._app.launch();
-              }
-              this.menu.close();
-            }));
+            appButtonEnterEvent(appGridButton, appType);
+            appButtonLeaveEvent(appGridButton)
+            appButtonButtonPressEvent(appGridButton, appType, app);
+            appButtonButtonReleaseEvent(appGridButton, appType, app);
             let gridLayout = this.applicationsGridBox.layout_manager;
             gridLayout.pack(appGridButton.actor, column, rownum);
             column++;
@@ -2326,7 +2333,9 @@ PanelMenuButton.prototype = {
             }
           }
         }
-        if (!refresh) this._places[app.name] = app;
+        if (!refresh) {
+          this._places[app.name] = app;
+        }
       }
     }
 
@@ -2346,52 +2355,19 @@ PanelMenuButton.prototype = {
         if (refresh || !this._recent[app.name]) {
           if (viewMode == ApplicationsViewMode.LIST) { // ListView
             let appListButton = new AppListButton(this, app, appType);
-            appListButton.actor.connect('enter-event', Lang.bind(this, function() {
-              appListButton.actor.add_style_class_name('menu-application-button-selected');
-              this.selectedAppTitle.set_text(appListButton._app.name);
-              if (appListButton._app.description) this.selectedAppDescription.set_text(appListButton._app.description);
-              else this.selectedAppDescription.set_text('');
-            }));
-            appListButton.actor.connect('leave-event', Lang.bind(this, function() {
-              appListButton.actor.remove_style_class_name('menu-application-button-selected');
-              this.selectedAppTitle.set_text('');
-              this.selectedAppDescription.set_text('');
-            }));
-            appListButton.actor.connect('button-press-event', Lang.bind(this, function() {
-              appListButton.actor.add_style_pseudo_class('pressed');
-            }));
-            appListButton.actor.connect('button-release-event', Lang.bind(this, function() {
-              appListButton.actor.remove_style_pseudo_class('pressed');
-              this.selectedAppTitle.set_text('');
-              this.selectedAppDescription.set_text('');
-              Gio.app_info_launch_default_for_uri(app.uri, global.create_app_launch_context(0, -1));
-              this.menu.close();
-            }));
+            appButtonEnterEvent(appListButton, appType);
+            appButtonLeaveEvent(appListButton)
+            appButtonButtonPressEvent(appListButton);
+            appButtonButtonReleaseEvent(appListButton, appType, app);
             this.applicationsListBox.add_actor(appListButton.actor);
           } else { // GridView
             let appGridButton = new AppGridButton(this, app, appType, true);
             appGridButton.buttonbox.width = this._appGridButtonWidth;
-            appGridButton.actor.connect('enter-event', Lang.bind(this, function() {
-              appGridButton.actor.add_style_class_name('menu-application-button-selected');
-              this.selectedAppTitle.set_text(appGridButton._app.name);
-              if (appGridButton._app.description) this.selectedAppDescription.set_text(appGridButton._app.description);
-              else this.selectedAppDescription.set_text('');
-            }));
-            appGridButton.actor.connect('leave-event', Lang.bind(this, function() {
-              appGridButton.actor.remove_style_class_name('menu-application-button-selected');
-              this.selectedAppTitle.set_text('');
-              this.selectedAppDescription.set_text('');
-            }));
-            appGridButton.actor.connect('button-press-event', Lang.bind(this, function() {
-              appGridButton.actor.add_style_pseudo_class('pressed');
-            }));
-            appGridButton.actor.connect('button-release-event', Lang.bind(this, function() {
-              appGridButton.actor.remove_style_pseudo_class('pressed');
-              this.selectedAppTitle.set_text('');
-              this.selectedAppDescription.set_text('');
-              Gio.app_info_launch_default_for_uri(app.uri, global.create_app_launch_context(0, -1));
-              this.menu.close();
-            }));
+            appGridButton.buttonbox.width = this._appGridButtonWidth;
+            appButtonEnterEvent(appGridButton, appType);
+            appButtonLeaveEvent(appGridButton)
+            appButtonButtonPressEvent(appGridButton);
+            appButtonButtonReleaseEvent(appGridButton, appType, app);
             let gridLayout = this.applicationsGridBox.layout_manager;
             gridLayout.pack(appGridButton.actor, column, rownum);
             column++;
@@ -2401,7 +2377,9 @@ PanelMenuButton.prototype = {
             }
           }
         }
-        if (!refresh) this._recent[app.name] = app;
+        if (!refresh) {
+          this._recent[app.name] = app;
+        }
       }
     }
 
@@ -2424,9 +2402,15 @@ PanelMenuButton.prototype = {
     var box_height = sBox.get_allocation_box().y2 - sBox.get_allocation_box().y1;
     var new_scroll_value = current_scroll_value;
 
-    if (current_scroll_value > buttonBox.y1 - 20) new_scroll_value = buttonBox.y1 - 20;
-    if (box_height + current_scroll_value < buttonBox.y2 + 20) new_scroll_value = buttonBox.y2 - box_height + 20;
-    if (new_scroll_value != current_scroll_value) vscroll.get_adjustment().set_value(new_scroll_value);
+    if (current_scroll_value > buttonBox.y1 - 20) {
+      new_scroll_value = buttonBox.y1 - 20;
+    }
+    if (box_height + current_scroll_value < buttonBox.y2 + 20) {
+      new_scroll_value = buttonBox.y2 - box_height + 20;
+    }
+    if (new_scroll_value != current_scroll_value) {
+      vscroll.get_adjustment().set_value(new_scroll_value);
+    }
   },
 
   _onMenuKeyPress: function(actor, event) {
@@ -2435,11 +2419,12 @@ PanelMenuButton.prototype = {
     let modifiers = event.get_state();
     let shift = modifiers & Clutter.ModifierType.SHIFT_MASK;
     let viewMode = this._applicationsViewMode;
-    let categoryMode = this._categoryWorkspaceMode;
+    //let categoryMode = this._categoryWorkspaceMode;
 
     let reverse;
-    if (code == 23 && shift)
+    if (code == 23 && shift) {
       reverse = true;
+    }
 
     // Tab navigation
     if (code == 23) {
@@ -2571,11 +2556,12 @@ PanelMenuButton.prototype = {
 
   selectActiveContainerItem: function(symbol, code, isFromSearch) {
     // Any items in container?
-    let children = new Array();
+    let children = [];
+    let columns, row;
     if (this._activeContainer.get_children) {
       children = this._activeContainer.get_children();
     }
-    if (children.length == 0) {
+    if (children.length === 0) {
       this._selectedItemIndex = -1;
     }
 
@@ -2585,11 +2571,11 @@ PanelMenuButton.prototype = {
 
     // Navigate the active container
     if (symbol && symbol == Clutter.KEY_Up) {
-      if (this._selectedItemIndex == null || this._selectedItemIndex < 0) {
+      if (!this._selectedItemIndex || this._selectedItemIndex < 0) {
         index = 0;
-      } else if (this._selectedItemIndex != null && this._selectedItemIndex > -1) {
+      } else if (this._selectedItemInde && this._selectedItemIndex > -1) {
         if (this._activeContainer == this.applicationsGridBox) {
-          var columns = this._appGridColumns;
+          columns = this._appGridColumns;
           index = (this._selectedItemIndex - columns < 0) ? this._selectedItemIndex : this._selectedItemIndex -
             columns;
         } else {
@@ -2597,11 +2583,11 @@ PanelMenuButton.prototype = {
         }
       }
     } else if (symbol && symbol == Clutter.KEY_Down) {
-      if (this._selectedItemIndex == null || this._selectedItemIndex < 0) {
+      if (!this._selectedItemIndex || this._selectedItemIndex < 0) {
         index = 0;
       } else {
         if (this._activeContainer == this.applicationsGridBox) {
-          var columns = this._appGridColumns;
+          columns = this._appGridColumns;
           index = (this._selectedItemIndex + columns >= children.length) ? this._selectedItemIndex : this._selectedItemIndex +
             columns;
         } else {
@@ -2609,12 +2595,12 @@ PanelMenuButton.prototype = {
         }
       }
     } else if (symbol && symbol == Clutter.KEY_Left) {
-      if (this._selectedItemIndex == null || this._selectedItemIndex < 0) {
+      if (!this._selectedItemIndex || this._selectedItemIndex < 0) {
         index = 0;
-      } else if (this._selectedItemIndex != null && this._selectedItemIndex > 0) {
+      } else if (this._selectedItemIndex && this._selectedItemIndex > 0) {
         if (this._activeContainer == this.applicationsGridBox) {
-          var columns = this._appGridColumns;
-          var row = Math.floor(this._selectedItemIndex / columns);
+          columns = this._appGridColumns;
+          row = Math.floor(this._selectedItemIndex / columns);
           var firstCol = (row * columns);
           index = (this._selectedItemIndex - 1 < firstCol) ? firstCol : this._selectedItemIndex - 1;
         } else {
@@ -2622,12 +2608,12 @@ PanelMenuButton.prototype = {
         }
       }
     } else if (symbol && symbol == Clutter.KEY_Right) {
-      if (this._selectedItemIndex == null || this._selectedItemIndex < 0) {
+      if (!this._selectedItemIndex || this._selectedItemIndex < 0) {
         index = 0;
       } else {
         if (this._activeContainer == this.applicationsGridBox) {
-          var columns = this._appGridColumns;
-          var row = Math.floor(this._selectedItemIndex / columns);
+          columns = this._appGridColumns;
+          row = Math.floor(this._selectedItemIndex / columns);
           var lastCol = (row * columns) + columns;
           lastCol = (lastCol > children.length) ? children.length : lastCol;
           index = (this._selectedItemIndex + 1 >= lastCol) ? index : this._selectedItemIndex + 1;
@@ -2714,17 +2700,25 @@ PanelMenuButton.prototype = {
       this.applicationsGridBox) {
       if (itemActor._delegate._type == ApplicationType.APPLICATION) {
         this.selectedAppTitle.set_text(itemActor._delegate._app.get_name());
-        if (itemActor._delegate._app.get_description()) this.selectedAppDescription.set_text(itemActor._delegate._app
-          .get_description());
-        else this.selectedAppDescription.set_text('');
+        if (itemActor._delegate._app.get_description()) {
+          this.selectedAppDescription.set_text(itemActor._delegate._app.get_description());
+        } else {
+          this.selectedAppDescription.set_text('');
+        }
       } else if (itemActor._delegate._type == ApplicationType.PLACE) {
         this.selectedAppTitle.set_text(itemActor._delegate._app.name);
-        if (itemActor._delegate._app.description) this.selectedAppDescription.set_text(itemActor._delegate._app.description);
-        else this.selectedAppDescription.set_text('');
+        if (itemActor._delegate._app.description) {
+          this.selectedAppDescription.set_text(itemActor._delegate._app.description);
+        } else {
+          this.selectedAppDescription.set_text('');
+        }
       } else if (itemActor._delegate._type == ApplicationType.RECENT) {
         this.selectedAppTitle.set_text(itemActor._delegate._app.name);
-        if (itemActor._delegate._app.description) this.selectedAppDescription.set_text(itemActor._delegate._app.description);
-        else this.selectedAppDescription.set_text('');
+        if (itemActor._delegate._app.description) {
+          this.selectedAppDescription.set_text(itemActor._delegate._app.description);
+        } else {
+          this.selectedAppDescription.set_text('');
+        }
       }
 
       // Scroll to item actor if hidden from view
@@ -2747,7 +2741,7 @@ PanelMenuButton.prototype = {
 
   _onSearchTextChanged: function(se, prop) {
     if (this.searchActive) {
-      if (this.searchEntry.get_text() == '') {
+      if (this.searchEntry.get_text() === '') {
         this._resetDisplayApplicationsToStartup();
       } else {
         this.toggleCategoryWorkspaceMode(CategoryWorkspaceMode.CATEGORY);
@@ -2760,20 +2754,21 @@ PanelMenuButton.prototype = {
     this.selectedAppDescription.set_text('');
 
 
-    this.searchActive = this.searchEntry.get_text() != '';
+    this.searchActive = this.searchEntry.get_text().length > 0;
     if (this.searchActive) {
 
       this.searchEntry.set_secondary_icon(this._searchActiveIcon);
 
-      if (this._searchIconClickedId == 0) {
+      if (this._searchIconClickedId === 0) {
         this._searchIconClickedId = this.searchEntry.connect('secondary-icon-clicked', Lang.bind(this, function() {
           this.resetSearchWithFocus();
           this._resetDisplayApplicationsToStartup();
         }));
       }
     } else {
-      if (this._searchIconClickedId > 0)
+      if (this._searchIconClickedId > 0) {
         this.searchEntry.disconnect(this._searchIconClickedId);
+      }
 
       this._searchIconClickedId = 0;
       this.searchEntry.set_secondary_icon(null);
@@ -2785,8 +2780,9 @@ PanelMenuButton.prototype = {
       }
       return;
     }
-    if (this._searchTimeoutId > 0)
+    if (this._searchTimeoutId > 0) {
       return;
+    }
 
     this._searchTimeoutId = Mainloop.timeout_add(150, Lang.bind(this, this._doSearch));
   },
@@ -2794,7 +2790,9 @@ PanelMenuButton.prototype = {
   _doSearch: function() {
     this._searchTimeoutId = 0;
     let pattern = this.searchEntryText.get_text().replace(/^\s+/g, '').replace(/\s+$/g, '').toLowerCase();
-    if (pattern === this._previousSearchPattern) return false;
+    if (pattern === this._previousSearchPattern) {
+      return false;
+    }
     this._previousSearchPattern = pattern;
 
     this._activeContainer = null;
@@ -2805,7 +2803,7 @@ PanelMenuButton.prototype = {
     // _listApplications returns all the applications when the search
     // string is zero length. This will happend if you type a space
     // in the search entry.
-    if (pattern.length == 0) {
+    if (pattern.length === 0) {
       return false;
     }
 
@@ -2944,7 +2942,9 @@ PanelMenuButton.prototype = {
         this.selectedAppTitle.set_text(this.recentCategory.label.get_text());
         this.selectedAppDescription.set_text('');
         if (this.recentCategory._opened) {
-          if (this._style1) this.recentCategory.actor.set_style(this._style1);
+          if (this._style1) {
+            this.recentCategory.actor.set_style(this._style1);
+          }
         }
       }));
       this.recentCategory.setButtonLeaveCallback(Lang.bind(this, function() {
@@ -2952,7 +2952,9 @@ PanelMenuButton.prototype = {
         this.selectedAppTitle.set_text('');
         this.selectedAppDescription.set_text('');
         if (this.recentCategory._opened) {
-          if (this._style2) this.recentCategory.actor.set_style(this._style2);
+          if (this._style2) {
+            this.recentCategory.actor.set_style(this._style2);
+          }
         }
       }));
       this.recentCategory.setButtonPressCallback(Lang.bind(this, function() {
@@ -2964,7 +2966,9 @@ PanelMenuButton.prototype = {
           this.recentCategory._opened = false;
           this.webBookmarksCategory._opened = false;
           this.placesCategory._opened = false;
-          if (this._style1) this.recentCategory.actor.set_style(this._style1);
+          if (this._style1) {
+            this.recentCategory.actor.set_style(this._style1);
+          }
           this.recentCategory.actor.remove_style_class_name('popup-sub-menu');
           this.webBookmarksCategory.actor.remove_style_class_name('popup-sub-menu');
           this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
@@ -2975,11 +2979,17 @@ PanelMenuButton.prototype = {
           this.webBookmarksCategory._opened = false;
           this.placesCategory._opened = false;
           this.recentCategory.actor.add_style_class_name('popup-sub-menu');
-          if (this._style2) this.recentCategory.actor.set_style(this._style2);
+          if (this._style2) {
+            this.recentCategory.actor.set_style(this._style2);
+          }
           this.webBookmarksCategory.actor.remove_style_class_name('popup-sub-menu');
-          if (this._style1) this.webBookmarksCategory.actor.set_style(this._style1);
+          if (this._style1) {
+            this.webBookmarksCategory.actor.set_style(this._style1);
+          }
           this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
-          if (this._style1) this.placesCategory.actor.set_style(this._style1);
+          if (this._style1) {
+            this.placesCategory.actor.set_style(this._style1);
+          }
           this._selectRecent(this.recentCategory);
           this.selectedAppTitle.set_text(this.recentCategory.label.get_text());
           this.selectedAppDescription.set_text('');
@@ -2996,7 +3006,9 @@ PanelMenuButton.prototype = {
       this.selectedAppTitle.set_text(this.webBookmarksCategory.label.get_text());
       this.selectedAppDescription.set_text('');
       if (this.webBookmarksCategory._opened) {
-        if (this._style1) this.webBookmarksCategory.actor.set_style(this._style1);
+        if (this._style1) {
+          this.webBookmarksCategory.actor.set_style(this._style1);
+        }
       }
     }));
     this.webBookmarksCategory.setButtonLeaveCallback(Lang.bind(this, function() {
@@ -3004,7 +3016,9 @@ PanelMenuButton.prototype = {
       this.selectedAppTitle.set_text('');
       this.selectedAppDescription.set_text('');
       if (this.webBookmarksCategory._opened) {
-        if (this._style2) this.webBookmarksCategory.actor.set_style(this._style2);
+        if (this._style2) {
+          this.webBookmarksCategory.actor.set_style(this._style2);
+        }
       }
     }));
     this.webBookmarksCategory.setButtonPressCallback(Lang.bind(this, function() {
@@ -3016,7 +3030,9 @@ PanelMenuButton.prototype = {
         this.webBookmarksCategory._opened = false;
         this.recentCategory._opened = false;
         this.placesCategory._opened = false;
-        if (this._style1) this.webBookmarksCategory.actor.set_style(this._style1);
+        if (this._style1) {
+          this.webBookmarksCategory.actor.set_style(this._style1);
+        }
         this.webBookmarksCategory.actor.remove_style_class_name('popup-sub-menu');
         this.recentCategory.actor.remove_style_class_name('popup-sub-menu');
         this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
@@ -3027,11 +3043,17 @@ PanelMenuButton.prototype = {
         this.recentCategory._opened = false;
         this.placesCategory._opened = false;
         this.webBookmarksCategory.actor.add_style_class_name('popup-sub-menu');
-        if (this._style2) this.webBookmarksCategory.actor.set_style(this._style2);
+        if (this._style2) {
+          this.webBookmarksCategory.actor.set_style(this._style2);
+        }
         this.recentCategory.actor.remove_style_class_name('popup-sub-menu');
-        if (this._style1) this.recentCategory.actor.set_style(this._style1);
+        if (this._style1) {
+          this.recentCategory.actor.set_style(this._style1);
+        }
         this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
-        if (this._style1) this.placesCategory.actor.set_style(this._style1);
+        if (this._style1) {
+          this.placesCategory.actor.set_style(this._style1);
+        }
         this._selectWebBookmarks(this.webBookmarksCategory);
         this.selectedAppTitle.set_text(this.webBookmarksCategory.label.get_text());
         this.selectedAppDescription.set_text('');
@@ -3053,7 +3075,9 @@ PanelMenuButton.prototype = {
       this.selectedAppTitle.set_text(this.placesCategory.label.get_text());
       this.selectedAppDescription.set_text('');
       if (this.placesCategory._opened) {
-        if (this._style1) this.placesCategory.actor.set_style(this._style1);
+        if (this._style1) {
+          this.placesCategory.actor.set_style(this._style1);
+        }
       }
     }));
     this.placesCategory.setButtonLeaveCallback(Lang.bind(this, function() {
@@ -3061,7 +3085,9 @@ PanelMenuButton.prototype = {
       this.selectedAppTitle.set_text('');
       this.selectedAppDescription.set_text('');
       if (this.placesCategory._opened) {
-        if (this._style2) this.placesCategory.actor.set_style(this._style2);
+        if (this._style2) {
+          this.placesCategory.actor.set_style(this._style2);
+        }
       }
     }));
     this.placesCategory.setButtonPressCallback(Lang.bind(this, function() {
@@ -3073,7 +3099,9 @@ PanelMenuButton.prototype = {
         this.placesCategory._opened = false;
         this.webBookmarksCategory._opened = false;
         this.recentCategory._opened = false;
-        if (this._style1) this.placesCategory.actor.set_style(this._style1);
+        if (this._style1) {
+          this.placesCategory.actor.set_style(this._style1);
+        }
         this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
         this.webBookmarksCategory.actor.remove_style_class_name('popup-sub-menu');
         this.recentCategory.actor.remove_style_class_name('popup-sub-menu');
@@ -3084,11 +3112,17 @@ PanelMenuButton.prototype = {
         this.webBookmarksCategory._opened = false;
         this.recentCategory._opened = false;
         this.placesCategory.actor.add_style_class_name('popup-sub-menu');
-        if (this._style2) this.placesCategory.actor.set_style(this._style2);
+        if (this._style2) {
+          this.placesCategory.actor.set_style(this._style2);
+        }
         this.webBookmarksCategory.actor.remove_style_class_name('popup-sub-menu');
-        if (this._style1) this.webBookmarksCategory.actor.set_style(this._style1);
+        if (this._style1) {
+          this.webBookmarksCategory.actor.set_style(this._style1);
+        }
         this.recentCategory.actor.remove_style_class_name('popup-sub-menu');
-        if (this._style1) this.recentCategory.actor.set_style(this._style1);
+        if (this._style1) {
+          this.recentCategory.actor.set_style(this._style1);
+        }
         if (this._applet.shortcutsDisplay == ShortcutsDisplay.PLACES) {
           this._selectFavorites(this.placesCategory);
         } else {
@@ -3358,10 +3392,8 @@ PanelMenuButton.prototype = {
       shortcuts = this.favorites;
       shortcutType = ApplicationType.APPLICATION;
     }
-    for (let i = 0, len = shortcuts.length; i < len; i++) {
-      let app = shortcuts[i];
-      let shortcutButton = new ShortcutButton(this, app, shortcutType);
-      this.shortcutsBox.add_actor(shortcutButton.actor);
+
+    let shortcutButtonEnterEvent = (shortcutButton)=>{
       shortcutButton.actor.connect('enter-event', Lang.bind(this, function() {
         shortcutButton.actor.add_style_class_name('selected');
         if (this._applet.shortcutsDisplay == ShortcutsDisplay.PLACES) {
@@ -3369,19 +3401,30 @@ PanelMenuButton.prototype = {
           this.selectedAppDescription.set_text('');
         } else {
           this.selectedAppTitle.set_text(shortcutButton._app.get_name());
-          if (shortcutButton._app.get_description()) this.selectedAppDescription.set_text(shortcutButton._app
-            .get_description());
-          else this.selectedAppDescription.set_text('');
+          if (shortcutButton._app.get_description()) {
+            this.selectedAppDescription.set_text(shortcutButton._app.get_description());
+          } else {
+            this.selectedAppDescription.set_text('');
+          }
         }
       }));
+    };
+
+    let shortcutButtonLeaveEvent = (shortcutButton)=>{
       shortcutButton.actor.connect('leave-event', Lang.bind(this, function() {
         shortcutButton.actor.remove_style_class_name('selected');
         this.selectedAppTitle.set_text('');
         this.selectedAppDescription.set_text('');
       }));
+    };
+
+    let shortcutButtonPressEvent = (shortcutButton)=>{
       shortcutButton.actor.connect('button-press-event', Lang.bind(this, function() {
         shortcutButton.actor.add_style_pseudo_class('pressed');
       }));
+    };
+
+    let shortcutButtonReleaseEvent = (shortcutButton, app)=>{
       shortcutButton.actor.connect('button-release-event', Lang.bind(this, function() {
         shortcutButton.actor.remove_style_pseudo_class('pressed');
         shortcutButton.actor.remove_style_class_name('selected');
@@ -3398,6 +3441,16 @@ PanelMenuButton.prototype = {
         }
         this.menu.close();
       }));
+    };
+
+    for (let i = 0, len = shortcuts.length; i < len; i++) {
+      let app = shortcuts[i];
+      let shortcutButton = new ShortcutButton(this, app, shortcutType);
+      this.shortcutsBox.add_actor(shortcutButton.actor);
+      shortcutButtonEnterEvent(shortcutButton);
+      shortcutButtonLeaveEvent(shortcutButton);
+      shortcutButtonPressEvent(shortcutButton);
+      shortcutButtonReleaseEvent(shortcutButton, app);
     }
 
     // CategoriesBox
@@ -3416,8 +3469,9 @@ PanelMenuButton.prototype = {
       this.selectedAppTitle.set_text(allAppCategory.label.get_text());
       this.selectedAppDescription.set_text('');
 
-      if (allAppCategory._ignoreHoverSelect)
+      if (allAppCategory._ignoreHoverSelect) {
         return;
+      }
 
       if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
         let hoverDelay = this._applet.categoryHoverDelay;
@@ -3501,8 +3555,9 @@ PanelMenuButton.prototype = {
       this.selectedAppTitle.set_text(favAppCategory.label.get_text());
       this.selectedAppDescription.set_text('');
 
-      if (favAppCategory._ignoreHoverSelect)
+      if (favAppCategory._ignoreHoverSelect) {
         return;
+      }
 
       if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
         let hoverDelay = this._applet.categoryHoverDelay;
@@ -3568,6 +3623,57 @@ PanelMenuButton.prototype = {
       return dirs;
     };
 
+    let appCategoryButtonEnterEvent = (appCategory)=>{
+      appCategory.setButtonEnterCallback(Lang.bind(this, function() {
+          appCategory.actor.add_style_pseudo_class('hover');
+          this.selectedAppTitle.set_text(appCategory.label.get_text());
+          this.selectedAppDescription.set_text('');
+
+          if (appCategory._ignoreHoverSelect) {
+            return;
+          }
+
+          if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
+            let hoverDelay = this._applet.categoryHoverDelay;
+            this._hoverTimeoutId = Mainloop.timeout_add((hoverDelay > 0) ? hoverDelay : 0, Lang.bind(this,
+              function() {
+                this._selectCategory(appCategory);
+                this._hoverTimeoutId = 0;
+              }));
+          }
+        }));
+    };
+
+    let appCategoryButtonLeaveEvent = (appCategory)=>{
+      appCategory.setButtonLeaveCallback(Lang.bind(this, function() {
+        appCategory.actor.remove_style_pseudo_class('hover');
+        this.selectedAppTitle.set_text('');
+        this.selectedAppDescription.set_text('');
+
+        if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
+          if (this._hoverTimeoutId > 0) {
+            Mainloop.source_remove(this._hoverTimeoutId);
+          }
+        }
+      }));
+    };
+
+    let appCategoryButtonPressEvent = (appCategory)=>{
+      appCategory.setButtonPressCallback(Lang.bind(this, function() {
+        appCategory.actor.add_style_class_name('menu-category-button-selected');
+      }));
+    };
+
+    let appCategoryButtonReleaseEvent = (appCategory)=>{
+      appCategory.setButtonReleaseCallback(Lang.bind(this, function() {
+        appCategory.actor.remove_style_class_name('menu-category-button-selected');
+        this._selectCategory(appCategory);
+        this.selectedAppTitle.set_text(appCategory.label.get_text());
+        this.selectedAppDescription.set_text('');
+      }));
+    };
+
+
     let trees = [this._applet.appSystem.get_tree()];
     for (let i = 0, len = trees.length; i < len; i++) {
       let tree = trees[i];
@@ -3593,43 +3699,10 @@ PanelMenuButton.prototype = {
         this._loadCategories(dir);
         if (this.applicationsByCategory[dir.get_menu_id()].length > 0) {
           let appCategory = new CategoryListButton(dir);
-          appCategory.setButtonEnterCallback(Lang.bind(this, function() {
-            appCategory.actor.add_style_pseudo_class('hover');
-            this.selectedAppTitle.set_text(appCategory.label.get_text());
-            this.selectedAppDescription.set_text('');
-
-            if (appCategory._ignoreHoverSelect)
-              return;
-
-            if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-              let hoverDelay = this._applet.categoryHoverDelay;
-              this._hoverTimeoutId = Mainloop.timeout_add((hoverDelay > 0) ? hoverDelay : 0, Lang.bind(this,
-                function() {
-                  this._selectCategory(appCategory);
-                  this._hoverTimeoutId = 0;
-                }));
-            }
-          }));
-          appCategory.setButtonLeaveCallback(Lang.bind(this, function() {
-            appCategory.actor.remove_style_pseudo_class('hover');
-            this.selectedAppTitle.set_text('');
-            this.selectedAppDescription.set_text('');
-
-            if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-              if (this._hoverTimeoutId > 0) {
-                Mainloop.source_remove(this._hoverTimeoutId);
-              }
-            }
-          }));
-          appCategory.setButtonPressCallback(Lang.bind(this, function() {
-            appCategory.actor.add_style_class_name('menu-category-button-selected');
-          }));
-          appCategory.setButtonReleaseCallback(Lang.bind(this, function() {
-            appCategory.actor.remove_style_class_name('menu-category-button-selected');
-            this._selectCategory(appCategory);
-            this.selectedAppTitle.set_text(appCategory.label.get_text());
-            this.selectedAppDescription.set_text('');
-          }));
+          appCategoryButtonEnterEvent(appCategory);
+          appCategoryButtonLeaveEvent(appCategory);
+          appCategoryButtonPressEvent(appCategory);
+          appCategoryButtonReleaseEvent(appCategory);
           this.categoriesBox.add_actor(appCategory.actor);
         }
       }
@@ -4117,7 +4190,9 @@ CinnamenuButton.prototype = {
   },
 
   _clearAll: function() {
-    if (this.appsMenuButton) this.actor.remove_actor(this.appsMenuButton.actor);
+    if (this.appsMenuButton) {
+      this.actor.remove_actor(this.appsMenuButton.actor);
+    }
 
     if (this.appsMenuButton) {
       this.appsMenuButton.destroy();
@@ -4207,17 +4282,23 @@ CinnamenuButton.prototype = {
 
   // handler for when new application installed
   _onAppInstalledChanged: function() {
-    if (this.appsMenuButton) this.appsMenuButton.refresh();
+    if (this.appsMenuButton) {
+      this.appsMenuButton.refresh();
+    }
   },
 
   // handler for when favorites change
   _onFavoritesChanged: function() {
-    if (this.appsMenuButton) this.appsMenuButton.refresh();
+    if (this.appsMenuButton) {
+      this.appsMenuButton.refresh();
+    }
   },
 
   // handler for when icons change
   _onIconsChanged: function() {
-    if (this.appsMenuButton) this.appsMenuButton.refresh();
+    if (this.appsMenuButton) {
+      this.appsMenuButton.refresh();
+    }
   },
 
   // function to bind preference setting changes
@@ -4266,21 +4347,27 @@ CinnamenuButton.prototype = {
         key: 'hide-useroptions',
         value: 'hideUserOptions',
         cb: Lang.bind(this, function() {
-          if (this.appsMenuButton) this.appsMenuButton.refresh();
+          if (this.appsMenuButton) {
+            this.appsMenuButton.refresh();
+          }
         })
       },
       {
         key: 'hide-shortcuts',
         value: 'hideShortcuts',
         cb: Lang.bind(this, function() {
-          if (this.appsMenuButton) this.appsMenuButton.refresh();
+          if (this.appsMenuButton) {
+            this.appsMenuButton.refresh();
+          }
         })
       },
       {
         key: 'shortcuts-display',
         value: 'shortcutsDisplay',
         cb: Lang.bind(this, function() {
-          if (this.appsMenuButton) this.appsMenuButton.refresh();
+          if (this.appsMenuButton) {
+            this.appsMenuButton.refresh();
+          }
         })
       },
       {
@@ -4292,7 +4379,9 @@ CinnamenuButton.prototype = {
         key: 'apps-grid-column-count',
         value: 'appsGridColumnCount',
         cb: Lang.bind(this, function() {
-          if (this.appsMenuButton) this.appsMenuButton.refresh();
+          if (this.appsMenuButton) {
+            this.appsMenuButton.refresh();
+          }
         })
       },
       {
@@ -4304,14 +4393,18 @@ CinnamenuButton.prototype = {
         key: 'hide-categories',
         value: 'hideCategories',
         cb: Lang.bind(this, function() {
-          if (this.appsMenuButton) this.appsMenuButton.refresh();
+          if (this.appsMenuButton) {
+            this.appsMenuButton.refresh();
+          }
         })
       },
       {
         key: 'category-selection-method',
         value: 'categorySelectionMethod',
         cb: Lang.bind(this, function() {
-          if (this.appsMenuButton) this.appsMenuButton.refresh();
+          if (this.appsMenuButton) {
+            this.appsMenuButton.refresh();
+          }
         })
       },
       {
@@ -4323,14 +4416,18 @@ CinnamenuButton.prototype = {
         key: 'shortcuts-icon-size',
         value: 'shortcutsIconSize',
         cb: Lang.bind(this, function() {
-          if (this.appsMenuButton) this.appsMenuButton.refresh();
+          if (this.appsMenuButton) {
+            this.appsMenuButton.refresh();
+          }
         })
       },
       {
         key: 'shortcuts-label',
         value: 'shortcutsLabel',
         cb: Lang.bind(this, function() {
-          if (this.appsMenuButton) this.appsMenuButton.refresh();
+          if (this.appsMenuButton) {
+            this.appsMenuButton.refresh();
+          }
         })
       },
       {
@@ -4358,26 +4455,33 @@ CinnamenuButton.prototype = {
   // function to destroy CinnamenuButton
   destroy: function() {
     // Disconnect global signals
-    if (this._installedChangedId)
+    if (this._installedChangedId) {
       this.appSystem.disconnect(this._installedChangedId);
+    }
 
-    if (this._favoritesChangedId)
+    if (this._favoritesChangedId) {
       AppFavorites.getAppFavorites().disconnect(this._favoritesChangedId);
+    }
 
-    if (this._iconsChangedId)
+    if (this._iconsChangedId) {
       IconTheme.get_default().disconnect(this._iconsChangedId);
+    }
 
-    if (this._themeChangedId)
+    if (this._themeChangedId) {
       St.ThemeContext.get_for_stage(global.stage).disconnect(this._themeChangedId);
+    }
 
-    if (this._overviewShownId)
+    if (this._overviewShownId) {
       Main.overview.disconnect(this._overviewShownId);
+    }
 
-    if (this._overviewHiddenId)
+    if (this._overviewHiddenId) {
       Main.overview.disconnect(this._overviewHiddenId);
+    }
 
-    if (this._overviewPageChangedId)
+    if (this._overviewPageChangedId) {
       Main.overview.disconnect(this._overviewPageChangedId);
+    }
 
     // Destroy main clutter actor: this should be sufficient
     // From clutter documentation:
