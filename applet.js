@@ -906,9 +906,11 @@ GroupButton.prototype = {
     this.buttonPressCallback = null;
     this.buttonReleaseCallback = null;
     let style = 'popup-menu-item popup-submenu-menu-item';
+    let paddingTop = labelText ? 3 : iconSize >= 18 ? 5 : 2;
     this.actor = new St.Button({
       reactive: true,
       style_class: style,
+      style: 'padding-top: '+paddingTop.toString()+'px;',
       x_align: St.Align.MIDDLE,
       y_align: St.Align.MIDDLE
     });
