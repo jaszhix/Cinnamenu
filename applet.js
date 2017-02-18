@@ -2880,17 +2880,17 @@ PanelMenuButton.prototype = {
 
     // Top pane holds user group, view mode, and search (packed horizonally)
     this.topPane = new St.BoxLayout({
-      style_class: 'menu-favorites-box'
+      style_class: ''
     });
 
     // Middle pane holds shortcuts, categories/places/power, applications, workspaces (packed horizontally)
     let middlePane = new St.BoxLayout({
-      style_class: 'menu-applications-outer-box'
+      style_class: 'menu-applications-inner-box'
     });
 
     // Bottom pane holds power group and selected app description (packed horizontally)
     this.bottomPane = new St.BoxLayout({
-      style_class: 'cinnamenu-menu-bottom-pane'
+      style_class: 'menu-favorites-box'
     });
 
     // groupCategoriesWorkspacesWrapper bin wraps categories and workspaces
