@@ -366,7 +366,7 @@ ShortcutButton.prototype = {
     this.actor.connect('touch-event', Lang.bind(this, this._onTouchEvent));
 
     // Connect drag-n-drop signals
-    this._draggable = DND.makeDraggable(this.actor);
+    /*this._draggable = DND.makeDraggable(this.actor);
     this._draggable.connect('drag-begin', Lang.bind(this,
       function() {
         //this._removeMenuTimeout();
@@ -384,7 +384,7 @@ ShortcutButton.prototype = {
     this._draggable.connect('drag-end', Lang.bind(this,
       function() {
         Main.overview.endItemDrag(this);
-      }));
+      }));*/
   },
 
   _onTouchEvent: function(actor, event) {
@@ -566,7 +566,7 @@ AppListButton.prototype = {
     }
 
     // Connect drag-n-drop signals
-    this._draggable = DND.makeDraggable(this.actor);
+    /*this._draggable = DND.makeDraggable(this.actor);
     this._draggable.connect('drag-begin', Lang.bind(this,
       function() {
         //this._removeMenuTimeout();
@@ -584,7 +584,7 @@ AppListButton.prototype = {
     this._draggable.connect('drag-end', Lang.bind(this,
       function() {
         Main.overview.endItemDrag(this);
-      }));
+      }));*/
 
     // Check if running state
     this._dot.opacity = 0;
@@ -791,7 +791,7 @@ AppGridButton.prototype = {
     }
 
     // Connect drag-n-drop signals
-    this._draggable = DND.makeDraggable(this.actor);
+    /*this._draggable = DND.makeDraggable(this.actor);
     this._draggable.connect('drag-begin', Lang.bind(this,
       function() {
         //this._removeMenuTimeout();
@@ -809,7 +809,7 @@ AppGridButton.prototype = {
     this._draggable.connect('drag-end', Lang.bind(this,
       function() {
         Main.overview.endItemDrag(this);
-      }));
+      }));*/
 
     // Check if running state
     this._dot.opacity = 0;
