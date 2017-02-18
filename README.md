@@ -1,7 +1,7 @@
 Cinnamenu
 ========
 
-Cinnamenu is full featured menu extension for Cinnamon. It is a fork and port of the GNOME Shell extension [Gnomenu](https://github.com/The-Panacea-Projects/cinnamenu) by The Panacea Projects.
+Cinnamenu is a full featured menu extension for Cinnamon. It is a fork and port of the GNOME Shell extension [Gnomenu](https://github.com/The-Panacea-Projects/gnomenu) by The Panacea Projects.
 
 ![screenshot](https://github.com/jaszhix/Cinnamenu/raw/master/screenshot.png)
 
