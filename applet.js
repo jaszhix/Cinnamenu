@@ -25,7 +25,6 @@ const Clutter = imports.gi.Clutter;
 const St = imports.gi.St;
 const Cinnamon = imports.gi.Cinnamon;
 const Util = imports.misc.util;
-const Meta = imports.gi.Meta;
 const Mainloop = imports.mainloop;
 const Lang = imports.lang;
 const Signals = imports.signals;
@@ -34,11 +33,10 @@ const Config = imports.misc.config;
 const GnomeSession = imports.misc.gnomeSession;
 const ScreenSaver = imports.misc.screenSaver;
 const AppFavorites = imports.ui.appFavorites;
-const Layout = imports.ui.layout;
 
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
-const DND = imports.ui.dnd;
+//const DND = imports.ui.dnd;
 const Applet = imports.ui.applet;
 const Settings = imports.ui.settings;
 
@@ -54,7 +52,6 @@ const Opera = AppletDir.webOpera;
 const Gettext = imports.gettext.domain('Cinnamenu@json');
 const _ = Gettext.gettext;
 
-const gsVersion = Config.PACKAGE_VERSION.split('.');
 const PlaceDisplay = AppletDir.placeDisplay;
 
 const PREFS_DIALOG = 'cinnamon-settings applets Cinnamenu@json';
@@ -905,13 +902,13 @@ GroupButton.prototype = {
     this.buttonLeaveCallback = null;
     this.buttonPressCallback = null;
     this.buttonReleaseCallback = null;
-    let style = 'popup-menu-item popup-submenu-menu-item';
-    let paddingTop = labelText ? 3 : iconSize >= 18 ? 5 : 2;
+    let style = 'popup-menu-item popup-submenu-menu-item' + params.style_class;
+    let paddingTop = labelText ? 2 : iconSize >= 18 ? 5 : 2;
     this.actor = new St.Button({
       reactive: true,
       style_class: style,
-      style: 'padding-top: '+paddingTop.toString()+'px;',
-      x_align: St.Align.MIDDLE,
+      style: 'padding-top: '+paddingTop.toString()+'px; padding-bottom: '+paddingTop.toString()+'px; padding-right: 10px; padding-left: 10px;',
+      x_align: St.Align.START,
       y_align: St.Align.MIDDLE
     });
     this.actor.add_style_class_name(params.style_class);
@@ -923,7 +920,6 @@ GroupButton.prototype = {
 
     if (iconName && iconSize) {
       this._iconSize = iconSize;
-      //this.icon = new St.Icon({icon_name: iconName, icon_size: iconSize, icon_type: St.IconType.SYMBOLIC});
       this.icon = new St.Icon({
         icon_name: iconName,
         icon_size: iconSize
@@ -940,9 +936,6 @@ GroupButton.prototype = {
         text: labelText,
         style_class: params.style_class + '-label'
       });
-      // Use pango to wrap label text
-      //this.label.clutter_text.line_wrap_mode = Pango.WrapMode.WORD;
-      //this.label.clutter_text.line_wrap = true;
       this.buttonbox.add(this.label, {
         x_fill: false,
         y_fill: false,
@@ -2887,12 +2880,12 @@ PanelMenuButton.prototype = {
 
     // Top pane holds user group, view mode, and search (packed horizonally)
     this.topPane = new St.BoxLayout({
-      style_class: 'cinnamenu-menu-top-pane'
+      style_class: 'menu-favorites-box'
     });
 
     // Middle pane holds shortcuts, categories/places/power, applications, workspaces (packed horizontally)
     let middlePane = new St.BoxLayout({
-      style_class: 'menu-applications-inner-box'
+      style_class: 'menu-applications-outer-box'
     });
 
     // Bottom pane holds power group and selected app description (packed horizontally)
@@ -2911,7 +2904,7 @@ PanelMenuButton.prototype = {
       x_fill: true,
       y_fill: false,
       y_align: St.Align.START,
-      style_class: 'cinnamenu-categories-workspaces-scrollbox'
+      style_class: 'vfade cinnamenu-categories-workspaces-scrollbox'
     });
     let vscrollCategories = this.groupCategoriesWorkspacesScrollBox.get_vscroll_bar();
     vscrollCategories.connect('scroll-start', Lang.bind(this, function() {
@@ -2953,7 +2946,7 @@ PanelMenuButton.prototype = {
     // Create 'recent' category button
     if (recentEnabled) {
       this.recentCategory = new GroupButton(this, null, null, _('Recent'), {
-        style_class: 'menu-category-button-button'
+        style_class: 'menu-category-button'
       });
       this.recentCategory.setButtonEnterCallback(Lang.bind(this, function() {
         this.recentCategory.actor.add_style_class_name('menu-category-button-selected');
@@ -3017,7 +3010,7 @@ PanelMenuButton.prototype = {
 
     // Create 'webBookmarks' category button
     this.webBookmarksCategory = new GroupButton(this, null, null, _('Bookmarks'), {
-      style_class: 'menu-category-button-button'
+      style_class: 'menu-category-button'
     });
     this.webBookmarksCategory.setButtonEnterCallback(Lang.bind(this, function() {
       this.webBookmarksCategory.actor.add_style_class_name('menu-category-button-selected');
