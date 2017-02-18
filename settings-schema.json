@@ -37,6 +37,46 @@
     "description": "Set the custom menu button icon name",
     "tooltip": "Set the custom menu button icon name"
   },
+  "shortcuts-icon-size": {
+    "type": "spinbutton",
+    "default": 18,
+    "min": 16,
+    "max": 256,
+    "step": 1,
+    "units": "pixels",
+    "description": "Shortcuts Panel icon size",
+    "tooltip": "Shortcuts Panel icon size"
+  },
+  "apps-list-icon-size": {
+    "type": "spinbutton",
+    "default": 24,
+    "min": 16,
+    "max": 256,
+    "step": 1,
+    "units": "pixels",
+    "description": "Applications list icon size",
+    "tooltip": "Applications list icon size"
+  },
+  "apps-grid-icon-size": {
+    "type": "spinbutton",
+    "default": 48,
+    "min": 16,
+    "max": 256,
+    "step": 1,
+    "units": "pixels",
+    "description": "Applications grid icon size",
+    "tooltip": "Applications grid icon size"
+  },
+  "apps-grid-label-width": {
+    "type": "spinbutton",
+    "default": 96,
+    "min": 16,
+    "max": 256,
+    "step": 1,
+    "units": "pixels",
+    "description": "Applications grid label width",
+    "tooltip": "Applications grid label width"
+  },
   "header2": {
     "type": "header",
     "description": "Behavior"
@@ -158,45 +198,5 @@
     "units": "milliseconds",
     "description": "Delay (ms) before selecting category",
     "tooltip": "Delay in milliseconds before the category is selected when hovering"
-  },
-  "shortcuts-icon-size": {
-    "type": "spinbutton",
-    "default": 18,
-    "min": 16,
-    "max": 256,
-    "step": 1,
-    "units": "pixels",
-    "description": "Shortcuts Panel icon size",
-    "tooltip": "Shortcuts Panel icon size"
-  },
-  "apps-list-icon-size": {
-    "type": "spinbutton",
-    "default": 24,
-    "min": 16,
-    "max": 256,
-    "step": 1,
-    "units": "pixels",
-    "description": "Applications list icon size",
-    "tooltip": "Applications list icon size"
-  },
-  "apps-grid-icon-size": {
-    "type": "spinbutton",
-    "default": 48,
-    "min": 16,
-    "max": 256,
-    "step": 1,
-    "units": "pixels",
-    "description": "Applications grid icon size",
-    "tooltip": "Applications grid icon size"
-  },
-  "apps-grid-label-width": {
-    "type": "spinbutton",
-    "default": 96,
-    "min": 16,
-    "max": 256,
-    "step": 1,
-    "units": "pixels",
-    "description": "Applications grid label width",
-    "tooltip": "Applications grid label width"
   }
 }
