@@ -128,7 +128,7 @@
   },
   "shortcuts-display": {
     "type": "combobox",
-    "default": 1,
+    "default": 0,
     "description": "Icons to display on Shortcuts Panel",
     "options": {
       "Favorites": 0,
