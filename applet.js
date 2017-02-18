@@ -1214,6 +1214,12 @@ PanelMenuButton.prototype = {
         this._switchApplicationsView(ApplicationsViewMode.GRID);
       }
 
+      if (this._applet.startupAppsDisplay === StartupAppsDisplay.ALL) {
+        this._selectCategory(this.allAppCategory);
+      } else if (this._applet.startupAppsDisplay === StartupAppsDisplay.FAVORITES) {
+        this._selectCategory(this.favAppCategory);
+      }
+
     } else {
       this.resetSearch();
       this._clearCategorySelections(this.categoriesBox);
@@ -1319,6 +1325,7 @@ PanelMenuButton.prototype = {
     if (typeof category == 'string') {
       this._displayApplications(this._listApplications(category));
     } else {
+
       this._displayApplications(this._listApplications(category.get_menu_id()));
     }
   },
@@ -3464,6 +3471,7 @@ PanelMenuButton.prototype = {
 
     // Load 'all applications' category
     let allAppCategory = new CategoryListButton('all', _('All Applications'), 'computer');
+    this.allAppCategory = allAppCategory;
     allAppCategory.setButtonEnterCallback(Lang.bind(this, function() {
       allAppCategory.actor.add_style_pseudo_class('hover');
       this.selectedAppTitle.set_text(allAppCategory.label.get_text());
@@ -3550,6 +3558,7 @@ PanelMenuButton.prototype = {
 
     // Load 'favorite applications' category
     let favAppCategory = new CategoryListButton('favorites', _('Favorite Apps'), 'address-book-new');
+    this.favAppCategory = favAppCategory;
     favAppCategory.setButtonEnterCallback(Lang.bind(this, function() {
       favAppCategory.actor.add_style_pseudo_class('hover');
       this.selectedAppTitle.set_text(favAppCategory.label.get_text());
@@ -3707,7 +3716,6 @@ PanelMenuButton.prototype = {
         }
       }
     }
-
 
     // PowerGroupBox
     this.powerGroupBox = new St.BoxLayout({
@@ -3923,8 +3931,6 @@ PanelMenuButton.prototype = {
       this.menu.close();
     }));
 
-
-
     // Place boxes in proper containers. The order added determines position
     // ----------------------------------------------------------------------
 
@@ -4032,11 +4038,7 @@ PanelMenuButton.prototype = {
 
     this._widthCategoriesBox = this.categoriesBox.width;
   }
-
 };
-
-
-
 
 /* =========================================================================
 /* name:    CinnamenuButton
