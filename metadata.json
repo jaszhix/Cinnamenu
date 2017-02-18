@@ -1,0 +1,11 @@
+{
+ "uuid": "Cinnamenu@json",
+ "name": "Cinnamenu",
+ "description": "Configurable Menu",
+ "max-instances": -1,
+ "dangerous": false,
+ "version": "1.0.0",
+ "cinnamon-version": [
+    "3.2"
+  ]
+}
