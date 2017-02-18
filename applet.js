@@ -2226,11 +2226,20 @@ PanelMenuButton.prototype = {
             this.selectedAppDescription.set_text('');
           }
         } else {
-          this.selectedAppTitle.set_text(appListButton._app.name);
+          // Until we figure out how to prevent the menu width from expanding when long titles are displayed,
+          // we will truncate the text.
+          let nameLength = appListButton._app.name.length;
+          let trailingTrunc = nameLength > 70 ? '...' : '';
+          let name = appListButton._app.name.substring(0, 45) + trailingTrunc;
+          this.selectedAppTitle.set_text(name);
           if (appListButton._app.description) {
             this.selectedAppDescription.set_text(appListButton._app.description);
           } else {
-            this.selectedAppDescription.set_text('');
+            if (appListButton._app.hasOwnProperty('uri')) {
+              this.selectedAppDescription.set_text(appListButton._app.uri);
+            } else {
+              this.selectedAppDescription.set_text('');
+            }
           }
         }
       }));
