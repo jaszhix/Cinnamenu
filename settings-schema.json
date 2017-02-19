@@ -108,12 +108,6 @@
     "description": "Use menu animations",
     "tooltip": "Allow the menu to animate on open and close"
   },
-  "hide-panel-menu": {
-    "type": "checkbox",
-    "default": false,
-    "description": "Remove the menu button from the panel",
-    "tooltip": "Remove the menu button from the panel"
-  },
   "hide-useroptions": {
     "type": "checkbox",
     "default": false,

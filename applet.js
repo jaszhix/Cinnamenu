@@ -4214,15 +4214,11 @@ CinnamenuButton.prototype = {
 
   _display: function() {
     // Initialize apps menu button
-    if (!this.hidePanelMenu) {
-      this.menuManager = new PopupMenu.PopupMenuManager(this);
-      this.menu = new Applet.AppletPopupMenu(this, this.orientation);
-      this.menuManager.addMenu(this.menu);
-      this.menu.setCustomStyleClass('menu-background');
-      this.appsMenuButton = new PanelMenuButton(this);
-    }
-
-    this.actor.add(this.appsMenuButton.actor);
+    this.menuManager = new PopupMenu.PopupMenuManager(this);
+    this.menu = new Applet.AppletPopupMenu(this, this.orientation);
+    this.menuManager.addMenu(this.menu);
+    this.menu.setCustomStyleClass('menu-background');
+    this.appsMenuButton = new PanelMenuButton(this);
   },
 
   openMenu: function() {
@@ -4344,11 +4340,6 @@ CinnamenuButton.prototype = {
         key: 'enable-animation',
         value: 'enableAnimation',
         cb: null
-      },
-      {
-        key: 'hide-panel-menu',
-        value: 'hidePanelMenu',
-        cb: this.refresh
       },
       {
         key: 'menu-label',
