@@ -1320,9 +1320,12 @@ PanelMenuButton.prototype = {
     if (typeof category == 'string') {
       this._displayApplications(this._listApplications(category));
     } else {
-
       this._displayApplications(this._listApplications(category.get_menu_id()));
     }
+
+    // Cache the current category button so we can invoke this function to get around the list/grid toggle
+    // not showing the app list.
+    this._currentCategoryButton = button;
   },
 
   _selectFavorites: function(button) {
@@ -2918,6 +2921,7 @@ PanelMenuButton.prototype = {
     this.groupCategoriesWorkspacesScrollBox.connect('button-release-event', Lang.bind(this, function(actor, event) {
       let button = event.get_button();
       if (button == 3) { //right click
+        // This was for showing workspace thumbnails, but serves to hide the category list on Cinnamon.
         this.toggleCategoryWorkspaceMode();
       }
     }));
@@ -3261,6 +3265,8 @@ PanelMenuButton.prototype = {
         this._switchApplicationsView(ApplicationsViewMode.LIST);
         this._applet.settings.setValue('startup-view-mode', 0);
       }
+      // Retrigger an app list render until we figure out why its not rendering anything on toggle.
+      this._selectCategory(this._currentCategoryButton);
     }));
 
     this.viewModeBox.add(this.toggleStartupAppsView.actor, {
