@@ -2890,7 +2890,7 @@ PanelMenuButton.prototype = {
 
     // Bottom pane holds power group and selected app description (packed horizontally)
     this.bottomPane = new St.BoxLayout({
-      style_class: 'menu-favorites-box'
+      style_class: ''
     });
 
     // groupCategoriesWorkspacesWrapper bin wraps categories and workspaces
