@@ -81,11 +81,6 @@ const ApplicationType = {
   RECENT: 2
 };
 
-const CategoryWorkspaceMode = {
-  CATEGORY: 0,
-  WORKSPACE: 1
-};
-
 const ApplicationsViewMode = {
   LIST: 0,
   GRID: 1
@@ -1069,7 +1064,6 @@ PanelMenuButton.prototype = {
     this._selectedItemIndex = null;
     this._previousSelectedItemIndex = null;
     this._activeContainer = null;
-    this._categoryWorkspaceMode = CategoryWorkspaceMode.CATEGORY;
 
     this._searchWebBookmarks = new SearchWebBookmarks();
     this._searchWebErrorsShown = false;
@@ -1135,9 +1129,7 @@ PanelMenuButton.prototype = {
       this._setButtonHeight(this.toggleStartupAppsView.actor, this.searchBox.height);
       this._setButtonHeight(this.toggleListGridView.actor, this.searchBox.height);
 
-      // Set Category or Workspace Mode
-      // Currently we force category mode when menu is toggled
-      this._categoryWorkspaceMode = CategoryWorkspaceMode.CATEGORY;
+      // Set Category
       this.categoriesBox.show();
       this._widthCategoriesBox = 0;
       this._widthShortcutsBox = 0;
@@ -1258,31 +1250,6 @@ PanelMenuButton.prototype = {
     button.height = adjustedHeight;
   },
 
-  toggleCategoryWorkspaceMode: function(mode) {
-    let toMode = null;
-    if (mode !== undefined) {
-      toMode = mode;
-    } else {
-      if (this._categoryWorkspaceMode == CategoryWorkspaceMode.CATEGORY) {
-        toMode = CategoryWorkspaceMode.WORKSPACE;
-      } else {
-        toMode = CategoryWorkspaceMode.CATEGORY;
-      }
-    }
-    if (toMode == CategoryWorkspaceMode.CATEGORY) {
-      this._categoryWorkspaceMode = CategoryWorkspaceMode.CATEGORY;
-      this.categoriesBox.width = this._widthCategoriesBox;
-      this.categoriesBox.show();
-    } else if (toMode == CategoryWorkspaceMode.WORKSPACE) {
-      this._categoryWorkspaceMode = CategoryWorkspaceMode.WORKSPACE;
-      if (this._widthCategoriesBox === 0) {
-        this._widthCategoriesBox = this.categoriesBox.width;
-      }
-      this.categoriesBox.hide();
-      this.categoriesBox.width = 0;
-    }
-  },
-
   _loadCategories: function(dir, root) {
     var rootDir = root;
     var iter = dir.iter();
@@ -1334,8 +1301,6 @@ PanelMenuButton.prototype = {
 
     let favorites = this.favorites;
     this._displayApplications(favorites);
-
-    this.toggleCategoryWorkspaceMode(CategoryWorkspaceMode.WORKSPACE);
   },
 
   _selectAllPlaces: function(button) {
@@ -1348,8 +1313,6 @@ PanelMenuButton.prototype = {
 
     let allPlaces = places.concat(bookmarks.concat(devices));
     this._displayApplications(null, allPlaces);
-
-    this.toggleCategoryWorkspaceMode(CategoryWorkspaceMode.WORKSPACE);
   },
 
   _selectBookmarks: function(button) {
@@ -1374,8 +1337,6 @@ PanelMenuButton.prototype = {
 
     let recent = this._listRecent();
     this._displayApplications(null, null, recent);
-
-    this.toggleCategoryWorkspaceMode(CategoryWorkspaceMode.WORKSPACE);
   },
 
   _selectWebBookmarks: function(button) {
@@ -1384,8 +1345,6 @@ PanelMenuButton.prototype = {
 
     let webBookmarks = this._listWebBookmarks();
     this._displayApplications(null, webBookmarks);
-
-    this.toggleCategoryWorkspaceMode(CategoryWorkspaceMode.WORKSPACE);
   },
 
   _switchApplicationsView: function(mode) {
@@ -2433,7 +2392,6 @@ PanelMenuButton.prototype = {
     let modifiers = event.get_state();
     let shift = modifiers & Clutter.ModifierType.SHIFT_MASK;
     let viewMode = this._applicationsViewMode;
-    //let categoryMode = this._categoryWorkspaceMode;
 
     let reverse;
     if (code == 23 && shift) {
@@ -2758,7 +2716,6 @@ PanelMenuButton.prototype = {
       if (this.searchEntry.get_text() === '') {
         this._resetDisplayApplicationsToStartup();
       } else {
-        this.toggleCategoryWorkspaceMode(CategoryWorkspaceMode.CATEGORY);
         this._clearCategorySelections(this.categoriesBox);
         this._clearUserGroupButtons();
       }
@@ -2918,13 +2875,12 @@ PanelMenuButton.prototype = {
     }));
     this.groupCategoriesWorkspacesScrollBox.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.NEVER);
     this.groupCategoriesWorkspacesScrollBox.set_mouse_scrolling(true);
-    this.groupCategoriesWorkspacesScrollBox.connect('button-release-event', Lang.bind(this, function(actor, event) {
+    /*this.groupCategoriesWorkspacesScrollBox.connect('button-release-event', Lang.bind(this, function(actor, event) {
       let button = event.get_button();
       if (button == 3) { //right click
-        // This was for showing workspace thumbnails, but serves to hide the category list on Cinnamon.
-        this.toggleCategoryWorkspaceMode();
+        // This was for showing workspace thumbnails, but serves no function on Cinnamon. Whether to use this signal or not TBD.
       }
-    }));
+    }));*/
 
     // selectedAppBox
     this.selectedAppBox = new St.BoxLayout({
@@ -2987,7 +2943,6 @@ PanelMenuButton.prototype = {
           this.recentCategory.actor.remove_style_class_name('popup-sub-menu');
           this.webBookmarksCategory.actor.remove_style_class_name('popup-sub-menu');
           this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
-          this.toggleCategoryWorkspaceMode(CategoryWorkspaceMode.CATEGORY);
           this._resetDisplayApplicationsToStartup();
         } else {
           this.recentCategory._opened = true;
@@ -3051,7 +3006,6 @@ PanelMenuButton.prototype = {
         this.webBookmarksCategory.actor.remove_style_class_name('popup-sub-menu');
         this.recentCategory.actor.remove_style_class_name('popup-sub-menu');
         this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
-        this.toggleCategoryWorkspaceMode(CategoryWorkspaceMode.CATEGORY);
         this._resetDisplayApplicationsToStartup();
       } else {
         this.webBookmarksCategory._opened = true;
@@ -3120,7 +3074,6 @@ PanelMenuButton.prototype = {
         this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
         this.webBookmarksCategory.actor.remove_style_class_name('popup-sub-menu');
         this.recentCategory.actor.remove_style_class_name('popup-sub-menu');
-        this.toggleCategoryWorkspaceMode(CategoryWorkspaceMode.CATEGORY);
         this._resetDisplayApplicationsToStartup();
       } else {
         this.placesCategory._opened = true;
