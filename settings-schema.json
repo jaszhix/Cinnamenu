@@ -132,7 +132,7 @@
   },
   "shortcuts-label": {
     "type": "checkbox",
-    "default": true,
+    "default": false,
     "description": "Show labels on the Shortcuts Panel",
     "tooltip": "Show labels on the Shortcuts Panel"
   },
