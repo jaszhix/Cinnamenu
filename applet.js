@@ -1125,7 +1125,7 @@ PanelMenuButton.prototype = {
       this.viewModeBox.height = this.searchBox.height;
       this._setButtonHeight(this.recentCategory.actor, this.searchBox.height);
       this._setButtonHeight(this.webBookmarksCategory.actor, this.searchBox.height);
-      this._setButtonHeight(this.placesCategory.actor, this.searchBox.height);
+      //this._setButtonHeight(this.placesCategory.actor, this.searchBox.height);
       this._setButtonHeight(this.toggleStartupAppsView.actor, this.searchBox.height);
       this._setButtonHeight(this.toggleListGridView.actor, this.searchBox.height);
 
@@ -1136,7 +1136,7 @@ PanelMenuButton.prototype = {
       this._widthUserGroupBox = 0;
       this.recentCategory._opened = false;
       this.webBookmarksCategory._opened = false;
-      this.placesCategory._opened = false;
+      //this.placesCategory._opened = false;
 
       // Adjust width of categories box and thumbnails box depending on if shortcuts are shown
       // Determine width based on user-power group button widths
@@ -1397,10 +1397,10 @@ PanelMenuButton.prototype = {
   _clearUserGroupButtons: function() {
     this.recentCategory.actor.remove_style_class_name('popup-sub-menu');
     this.webBookmarksCategory.actor.remove_style_class_name('popup-sub-menu');
-    this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
+    //this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
     this.recentCategory._opened = false;
     this.webBookmarksCategory._opened = false;
-    this.placesCategory._opened = false;
+    //this.placesCategory._opened = false;
   },
 
   _clearTabFocusSelections: function(selectedBox, resetSearch) {
@@ -2936,18 +2936,18 @@ PanelMenuButton.prototype = {
         if (this.recentCategory._opened) {
           this.recentCategory._opened = false;
           this.webBookmarksCategory._opened = false;
-          this.placesCategory._opened = false;
+          //this.placesCategory._opened = false;
           if (this._style1) {
             this.recentCategory.actor.set_style(this._style1);
           }
           this.recentCategory.actor.remove_style_class_name('popup-sub-menu');
           this.webBookmarksCategory.actor.remove_style_class_name('popup-sub-menu');
-          this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
+          //this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
           this._resetDisplayApplicationsToStartup();
         } else {
           this.recentCategory._opened = true;
           this.webBookmarksCategory._opened = false;
-          this.placesCategory._opened = false;
+          //this.placesCategory._opened = false;
           this.recentCategory.actor.add_style_class_name('popup-sub-menu');
           if (this._style2) {
             this.recentCategory.actor.set_style(this._style2);
@@ -2956,10 +2956,10 @@ PanelMenuButton.prototype = {
           if (this._style1) {
             this.webBookmarksCategory.actor.set_style(this._style1);
           }
-          this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
-          if (this._style1) {
+          //this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
+          /*if (this._style1) {
             this.placesCategory.actor.set_style(this._style1);
-          }
+          }*/
           this._selectRecent(this.recentCategory);
           this.selectedAppTitle.set_text(this.recentCategory.label.get_text());
           this.selectedAppDescription.set_text('');
@@ -2999,18 +2999,18 @@ PanelMenuButton.prototype = {
       if (this.webBookmarksCategory._opened) {
         this.webBookmarksCategory._opened = false;
         this.recentCategory._opened = false;
-        this.placesCategory._opened = false;
+        //this.placesCategory._opened = false;
         if (this._style1) {
           this.webBookmarksCategory.actor.set_style(this._style1);
         }
         this.webBookmarksCategory.actor.remove_style_class_name('popup-sub-menu');
         this.recentCategory.actor.remove_style_class_name('popup-sub-menu');
-        this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
+        //this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
         this._resetDisplayApplicationsToStartup();
       } else {
         this.webBookmarksCategory._opened = true;
         this.recentCategory._opened = false;
-        this.placesCategory._opened = false;
+        //this.placesCategory._opened = false;
         this.webBookmarksCategory.actor.add_style_class_name('popup-sub-menu');
         if (this._style2) {
           this.webBookmarksCategory.actor.set_style(this._style2);
@@ -3019,9 +3019,9 @@ PanelMenuButton.prototype = {
         if (this._style1) {
           this.recentCategory.actor.set_style(this._style1);
         }
-        this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
+        //this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
         if (this._style1) {
-          this.placesCategory.actor.set_style(this._style1);
+          //this.placesCategory.actor.set_style(this._style1);
         }
         this._selectWebBookmarks(this.webBookmarksCategory);
         this.selectedAppTitle.set_text(this.webBookmarksCategory.label.get_text());
@@ -3030,7 +3030,7 @@ PanelMenuButton.prototype = {
     }));
 
     // Create 'places-favorites' category button
-    if (this._applet.shortcutsDisplay == ShortcutsDisplay.PLACES) {
+    /*if (this._applet.shortcutsDisplay == ShortcutsDisplay.PLACES) {
       this.placesCategory = new GroupButton(this, null, null, _('Favorites'), {
         style_class: 'menu-category-button'
       });
@@ -3099,7 +3099,7 @@ PanelMenuButton.prototype = {
         this.selectedAppTitle.set_text(this.placesCategory.label.get_text());
         this.selectedAppDescription.set_text('');
       }
-    }));
+    }));*/
 
 
     if (recentEnabled) {
@@ -3127,12 +3127,12 @@ PanelMenuButton.prototype = {
       x_align: St.Align.MIDDLE,
       y_align: St.Align.MIDDLE
     });
-    this.userGroupBox.add(this.placesCategory.actor, {
+    /*this.userGroupBox.add(this.placesCategory.actor, {
       x_fill: false,
       y_fill: false,
       x_align: St.Align.MIDDLE,
       y_align: St.Align.MIDDLE
-    });
+    });*/
 
     if (this._applet.hideUserOptions) {
       this._widthUserGroupBox = 0;
