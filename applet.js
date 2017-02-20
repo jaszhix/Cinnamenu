@@ -2840,6 +2840,7 @@ PanelMenuButton.prototype = {
         this._applet.settings.setValue('startup-view-mode', 0);
       }
       // Retrigger an app list render until we figure out why its not rendering anything on toggle.
+      this._calculateApplicationsBoxWidth(this._applicationsViewMode === ApplicationsViewMode.LIST);
       this[this._currentSelectKey](this._currentCategoryButton);
     }));
 
