@@ -2903,132 +2903,6 @@ PanelMenuButton.prototype = {
       style_class: 'cinnamenu-user-group-box'
     });
 
-    // Create 'recent' category button
-    if (recentEnabled) {
-      this.recentCategory = new GroupButton(this, null, null, _('Recent'), {
-        style_class: 'menu-category-button'
-      });
-      this.recentCategory.setButtonEnterCallback(Lang.bind(this, function() {
-        this.recentCategory.actor.add_style_class_name('menu-category-button-selected');
-        this.selectedAppTitle.set_text(this.recentCategory.label.get_text());
-        this.selectedAppDescription.set_text('');
-        if (this.recentCategory._opened) {
-          if (this._style1) {
-            this.recentCategory.actor.set_style(this._style1);
-          }
-        }
-      }));
-      this.recentCategory.setButtonLeaveCallback(Lang.bind(this, function() {
-        this.recentCategory.actor.remove_style_class_name('menu-category-button-selected');
-        this.selectedAppTitle.set_text('');
-        this.selectedAppDescription.set_text('');
-        if (this.recentCategory._opened) {
-          if (this._style2) {
-            this.recentCategory.actor.set_style(this._style2);
-          }
-        }
-      }));
-      this.recentCategory.setButtonPressCallback(Lang.bind(this, function() {
-        this.recentCategory.actor.add_style_pseudo_class('pressed');
-      }));
-      this.recentCategory.setButtonReleaseCallback(Lang.bind(this, function() {
-        this.recentCategory.actor.remove_style_pseudo_class('pressed');
-        if (this.recentCategory._opened) {
-          this.recentCategory._opened = false;
-          this.webBookmarksCategory._opened = false;
-          //this.placesCategory._opened = false;
-          if (this._style1) {
-            this.recentCategory.actor.set_style(this._style1);
-          }
-          this.recentCategory.actor.remove_style_class_name('popup-sub-menu');
-          this.webBookmarksCategory.actor.remove_style_class_name('popup-sub-menu');
-          //this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
-          this._resetDisplayApplicationsToStartup();
-        } else {
-          this.recentCategory._opened = true;
-          this.webBookmarksCategory._opened = false;
-          //this.placesCategory._opened = false;
-          this.recentCategory.actor.add_style_class_name('popup-sub-menu');
-          if (this._style2) {
-            this.recentCategory.actor.set_style(this._style2);
-          }
-          this.webBookmarksCategory.actor.remove_style_class_name('popup-sub-menu');
-          if (this._style1) {
-            this.webBookmarksCategory.actor.set_style(this._style1);
-          }
-          //this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
-          /*if (this._style1) {
-            this.placesCategory.actor.set_style(this._style1);
-          }*/
-          this._selectRecent(this.recentCategory);
-          this.selectedAppTitle.set_text(this.recentCategory.label.get_text());
-          this.selectedAppDescription.set_text('');
-        }
-      }));
-    }
-
-    // Create 'webBookmarks' category button
-    this.webBookmarksCategory = new GroupButton(this, null, null, _('Bookmarks'), {
-      style_class: 'menu-category-button'
-    });
-    this.webBookmarksCategory.setButtonEnterCallback(Lang.bind(this, function() {
-      this.webBookmarksCategory.actor.add_style_class_name('menu-category-button-selected');
-      this.selectedAppTitle.set_text(this.webBookmarksCategory.label.get_text());
-      this.selectedAppDescription.set_text('');
-      if (this.webBookmarksCategory._opened) {
-        if (this._style1) {
-          this.webBookmarksCategory.actor.set_style(this._style1);
-        }
-      }
-    }));
-    this.webBookmarksCategory.setButtonLeaveCallback(Lang.bind(this, function() {
-      this.webBookmarksCategory.actor.remove_style_class_name('menu-category-button-selected');
-      this.selectedAppTitle.set_text('');
-      this.selectedAppDescription.set_text('');
-      if (this.webBookmarksCategory._opened) {
-        if (this._style2) {
-          this.webBookmarksCategory.actor.set_style(this._style2);
-        }
-      }
-    }));
-    this.webBookmarksCategory.setButtonPressCallback(Lang.bind(this, function() {
-      this.webBookmarksCategory.actor.add_style_pseudo_class('pressed');
-    }));
-    this.webBookmarksCategory.setButtonReleaseCallback(Lang.bind(this, function() {
-      this.webBookmarksCategory.actor.remove_style_pseudo_class('pressed');
-      if (this.webBookmarksCategory._opened) {
-        this.webBookmarksCategory._opened = false;
-        this.recentCategory._opened = false;
-        //this.placesCategory._opened = false;
-        if (this._style1) {
-          this.webBookmarksCategory.actor.set_style(this._style1);
-        }
-        this.webBookmarksCategory.actor.remove_style_class_name('popup-sub-menu');
-        this.recentCategory.actor.remove_style_class_name('popup-sub-menu');
-        //this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
-        this._resetDisplayApplicationsToStartup();
-      } else {
-        this.webBookmarksCategory._opened = true;
-        this.recentCategory._opened = false;
-        //this.placesCategory._opened = false;
-        this.webBookmarksCategory.actor.add_style_class_name('popup-sub-menu');
-        if (this._style2) {
-          this.webBookmarksCategory.actor.set_style(this._style2);
-        }
-        this.recentCategory.actor.remove_style_class_name('popup-sub-menu');
-        if (this._style1) {
-          this.recentCategory.actor.set_style(this._style1);
-        }
-        //this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
-        if (this._style1) {
-          //this.placesCategory.actor.set_style(this._style1);
-        }
-        this._selectWebBookmarks(this.webBookmarksCategory);
-        this.selectedAppTitle.set_text(this.webBookmarksCategory.label.get_text());
-        this.selectedAppDescription.set_text('');
-      }
-    }));
-
     // Create 'places-favorites' category button
     /*if (this._applet.shortcutsDisplay == ShortcutsDisplay.PLACES) {
       this.placesCategory = new GroupButton(this, null, null, _('Favorites'), {
@@ -3680,6 +3554,91 @@ PanelMenuButton.prototype = {
       }
     }
 
+    // Load 'recent' category
+    if (recentEnabled) {
+      this.recentCategory = new CategoryListButton('recent', _('Recent'), 'folder-recent');
+      this.recentCategory.setButtonEnterCallback(Lang.bind(this, function() {
+        this.recentCategory.actor.add_style_pseudo_class('hover');
+        this.selectedAppTitle.set_text(this.recentCategory.label.get_text());
+        this.selectedAppDescription.set_text('');
+
+        if (this.recentCategory._ignoreHoverSelect) {
+          return;
+        }
+
+        if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
+          let hoverDelay = this._applet.categoryHoverDelay;
+          this._hoverTimeoutId = Mainloop.timeout_add((hoverDelay > 0) ? hoverDelay : 0, Lang.bind(this,
+            function() {
+              this._selectRecent(this.recentCategory);
+              this._hoverTimeoutId = 0;
+            }));
+        }
+      }));
+      this.recentCategory.setButtonLeaveCallback(Lang.bind(this, function() {
+        this.recentCategory.actor.remove_style_pseudo_class('hover');
+        this.selectedAppTitle.set_text('');
+        this.selectedAppDescription.set_text('');
+
+        if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
+          if (this._hoverTimeoutId > 0) {
+            Mainloop.source_remove(this._hoverTimeoutId);
+          }
+        }
+      }));
+      this.recentCategory.setButtonPressCallback(Lang.bind(this, function() {
+        this.recentCategory.actor.add_style_class_name('menu-category-button-selected');
+      }));
+      this.recentCategory.setButtonReleaseCallback(Lang.bind(this, function() {
+        this.recentCategory.actor.remove_style_class_name('menu-category-button-selected');
+        this._selectRecent(this.recentCategory);
+        this.selectedAppTitle.set_text(this.recentCategory.label.get_text());
+        this.selectedAppDescription.set_text('');
+      }));
+      this.categoriesBox.add_actor(this.recentCategory.actor);
+    }
+
+    // Load 'bookmarks' category
+    this.webBookmarksCategory = new CategoryListButton('bookmarks', _('Bookmarks'), 'emblem-favorite');
+    this.webBookmarksCategory.setButtonEnterCallback(Lang.bind(this, function() {
+      this.webBookmarksCategory.actor.add_style_pseudo_class('hover');
+      this.selectedAppTitle.set_text(this.webBookmarksCategory.label.get_text());
+      this.selectedAppDescription.set_text('');
+
+      if (this.webBookmarksCategory._ignoreHoverSelect) {
+        return;
+      }
+
+      if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
+        let hoverDelay = this._applet.categoryHoverDelay;
+        this._hoverTimeoutId = Mainloop.timeout_add((hoverDelay > 0) ? hoverDelay : 0, Lang.bind(this,
+          function() {
+            this._selectWebBookmarks(this.webBookmarksCategory);
+            this._hoverTimeoutId = 0;
+          }));
+      }
+    }));
+    this.webBookmarksCategory.setButtonLeaveCallback(Lang.bind(this, function() {
+      this.webBookmarksCategory.actor.remove_style_pseudo_class('hover');
+      this.selectedAppTitle.set_text('');
+      this.selectedAppDescription.set_text('');
+
+      if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
+        if (this._hoverTimeoutId > 0) {
+          Mainloop.source_remove(this._hoverTimeoutId);
+        }
+      }
+    }));
+    this.webBookmarksCategory.setButtonPressCallback(Lang.bind(this, function() {
+      this.webBookmarksCategory.actor.add_style_class_name('menu-category-button-selected');
+    }));
+    this.webBookmarksCategory.setButtonReleaseCallback(Lang.bind(this, function() {
+      this.webBookmarksCategory.actor.remove_style_class_name('menu-category-button-selected');
+      this._selectWebBookmarks(this.webBookmarksCategory);
+      this.selectedAppTitle.set_text(this.webBookmarksCategory.label.get_text());
+      this.selectedAppDescription.set_text('');
+    }));
+    this.categoriesBox.add_actor(this.webBookmarksCategory.actor);
     // PowerGroupBox
     this.powerGroupBox = new St.BoxLayout({
       style_class: 'cinnamenu-power-group-box'
