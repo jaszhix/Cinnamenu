@@ -2129,21 +2129,22 @@ PanelMenuButton.prototype = {
     }
   },
 
-  _resetDisplayApplicationsToStartup: function() {
-    if (this._applet.startupAppsDisplay === StartupAppsDisplay.ALL) {
+  _resetDisplayApplicationsToStartup: function() { // TBD
+    this._selectCategory(this.favAppCategory);
+    /*if (this._applet.startupAppsDisplay === StartupAppsDisplay.ALL) {
       // TODO: All apps hardcoded at category position 0
       let allAppCategoryButton = this.categoriesBox.get_child_at_index(0)._delegate;
       let allAppcategory = allAppCategoryButton._dir;
       this._clearApplicationsBox(allAppCategoryButton);
       this._displayApplications(this._listApplications(allAppcategory));
     }
-    /*else if (this._startupAppsView == StartupAppsDisplay.FREQUENT) {
+    else if (this._startupAppsView == StartupAppsDisplay.FREQUENT) {
                // TODO: Frequent apps hardcoded at category position 1
                let freqAppCategoryButton = this.categoriesBox.get_child_at_index(1)._delegate;
                let freqAppCategory = freqAppCategoryButton._dir;
                this._clearApplicationsBox(freqAppCategoryButton);
                this._displayApplications(this._listApplications(freqAppCategory));
-           }*/
+           }
     else if (this._applet.startupAppsDisplay === StartupAppsDisplay.FAVORITES) {
       // TODO: Favorite apps hardcoded at category position 2
       let favAppCategoryButton = this.categoriesBox.get_child_at_index(1)._delegate;
@@ -2152,7 +2153,7 @@ PanelMenuButton.prototype = {
       this._displayApplications(this._listApplications(favAppCategory));
     } else {
       this._clearApplicationsBox();
-    }
+    }*/
   },
 
   _displayApplications: function(apps, places, recent, refresh) {
@@ -2898,122 +2899,6 @@ PanelMenuButton.prototype = {
     });
     this.selectedAppBox.add_actor(this.selectedAppDescription);
 
-    // UserGroupBox
-    this.userGroupBox = new St.BoxLayout({
-      style_class: 'cinnamenu-user-group-box'
-    });
-
-    // Create 'places-favorites' category button
-    /*if (this._applet.shortcutsDisplay == ShortcutsDisplay.PLACES) {
-      this.placesCategory = new GroupButton(this, null, null, _('Favorites'), {
-        style_class: 'menu-category-button'
-      });
-    } else {
-      this.placesCategory = new GroupButton(this, null, null, _('Places'), {
-        style_class: 'menu-category-button'
-      });
-    }
-    this.placesCategory.setButtonEnterCallback(Lang.bind(this, function() {
-      this.placesCategory.actor.add_style_class_name('menu-category-button-selected');
-      this.selectedAppTitle.set_text(this.placesCategory.label.get_text());
-      this.selectedAppDescription.set_text('');
-      if (this.placesCategory._opened) {
-        if (this._style1) {
-          this.placesCategory.actor.set_style(this._style1);
-        }
-      }
-    }));
-    this.placesCategory.setButtonLeaveCallback(Lang.bind(this, function() {
-      this.placesCategory.actor.remove_style_class_name('menu-category-button-selected');
-      this.selectedAppTitle.set_text('');
-      this.selectedAppDescription.set_text('');
-      if (this.placesCategory._opened) {
-        if (this._style2) {
-          this.placesCategory.actor.set_style(this._style2);
-        }
-      }
-    }));
-    this.placesCategory.setButtonPressCallback(Lang.bind(this, function() {
-      this.placesCategory.actor.add_style_pseudo_class('pressed');
-    }));
-    this.placesCategory.setButtonReleaseCallback(Lang.bind(this, function() {
-      this.placesCategory.actor.remove_style_pseudo_class('pressed');
-      if (this.placesCategory._opened) {
-        this.placesCategory._opened = false;
-        this.webBookmarksCategory._opened = false;
-        this.recentCategory._opened = false;
-        if (this._style1) {
-          this.placesCategory.actor.set_style(this._style1);
-        }
-        this.placesCategory.actor.remove_style_class_name('popup-sub-menu');
-        this.webBookmarksCategory.actor.remove_style_class_name('popup-sub-menu');
-        this.recentCategory.actor.remove_style_class_name('popup-sub-menu');
-        this._resetDisplayApplicationsToStartup();
-      } else {
-        this.placesCategory._opened = true;
-        this.webBookmarksCategory._opened = false;
-        this.recentCategory._opened = false;
-        this.placesCategory.actor.add_style_class_name('popup-sub-menu');
-        if (this._style2) {
-          this.placesCategory.actor.set_style(this._style2);
-        }
-        this.webBookmarksCategory.actor.remove_style_class_name('popup-sub-menu');
-        if (this._style1) {
-          this.webBookmarksCategory.actor.set_style(this._style1);
-        }
-        this.recentCategory.actor.remove_style_class_name('popup-sub-menu');
-        if (this._style1) {
-          this.recentCategory.actor.set_style(this._style1);
-        }
-        if (this._applet.shortcutsDisplay == ShortcutsDisplay.PLACES) {
-          this._selectFavorites(this.placesCategory);
-        } else {
-          this._selectAllPlaces(this.placesCategory);
-        }
-        this.selectedAppTitle.set_text(this.placesCategory.label.get_text());
-        this.selectedAppDescription.set_text('');
-      }
-    }));*/
-
-
-    if (recentEnabled) {
-      this.userGroupBox.add(this.recentCategory.actor, {
-        x_fill: false,
-        y_fill: false,
-        x_align: St.Align.MIDDLE,
-        y_align: St.Align.MIDDLE
-      });
-    } else {
-      this.recentCategory = new GroupButton(this, null, null, '      ', {
-        style_class: 'cinnamenu-user-group-button'
-      }); // dummy version
-      this.userGroupBox.add(this.recentCategory.actor, {
-        x_fill: false,
-        y_fill: false,
-        x_align: St.Align.MIDDLE,
-        y_align: St.Align.MIDDLE
-      });
-    }
-
-    this.userGroupBox.add(this.webBookmarksCategory.actor, {
-      x_fill: false,
-      y_fill: false,
-      x_align: St.Align.MIDDLE,
-      y_align: St.Align.MIDDLE
-    });
-    /*this.userGroupBox.add(this.placesCategory.actor, {
-      x_fill: false,
-      y_fill: false,
-      x_align: St.Align.MIDDLE,
-      y_align: St.Align.MIDDLE
-    });*/
-
-    if (this._applet.hideUserOptions) {
-      this._widthUserGroupBox = 0;
-      this.userGroupBox.hide();
-    }
-
-
     // ViewModeBox
     let viewModeButtonIcon = 'view-grid-symbolic';
     if (this._applicationsViewMode == ApplicationsViewMode.LIST) {
@@ -3033,35 +2918,6 @@ PanelMenuButton.prototype = {
     this.viewModeBox = new St.BoxLayout({
       style_class: 'cinnamenu-view-mode-box' + viewModeAdditionalStyle
     });
-
-    this.toggleStartupAppsView = new GroupButton(this, 'view-toggle-apps-symbolic', viewModeButtonIconSize, null, {
-      style_class: 'menu-category-button'
-    });
-    this.toggleStartupAppsView.setButtonEnterCallback(Lang.bind(this, function() {
-      this.toggleStartupAppsView.actor.add_style_class_name('menu-category-button-selected');
-      this.selectedAppTitle.set_text(_('Toggle Startup Apps View'));
-      this.selectedAppDescription.set_text('');
-    }));
-    this.toggleStartupAppsView.setButtonLeaveCallback(Lang.bind(this, function() {
-      this.toggleStartupAppsView.actor.remove_style_class_name('menu-category-button-selected');
-      this.selectedAppTitle.set_text(_('Toggle Startup Apps View'));
-      this.selectedAppDescription.set_text('');
-    }));
-    this.toggleStartupAppsView.setButtonPressCallback(Lang.bind(this, function() {
-      this.toggleStartupAppsView.actor.add_style_pseudo_class('pressed');
-    }));
-    this.toggleStartupAppsView.setButtonReleaseCallback(Lang.bind(this, function() {
-      this.toggleStartupAppsView.actor.remove_style_pseudo_class('pressed');
-      this.selectedAppTitle.set_text(_('Toggle Startup Apps View'));
-      this.selectedAppDescription.set_text('');
-      this._applet.startupAppsDisplay = this._applet.startupAppsDisplay + 1;
-      if (this._applet.startupAppsDisplay > StartupAppsDisplay.FAVORITES) {
-        this._applet.startupAppsDisplay = StartupAppsDisplay.ALL;
-      }
-      this._applet.settings.setValue('startup-apps-display', this._applet.startupAppsDisplay);
-      this._resetDisplayApplicationsToStartup();
-    }));
-
 
     this.toggleListGridView = new GroupButton(this, viewModeButtonIcon, viewModeButtonIconSize, null, {
       style_class: 'menu-category-button'
@@ -3096,12 +2952,6 @@ PanelMenuButton.prototype = {
       this._selectCategory(this._currentCategoryButton);
     }));
 
-    this.viewModeBox.add(this.toggleStartupAppsView.actor, {
-      x_fill: false,
-      y_fill: false,
-      x_align: St.Align.MIDDLE,
-      y_align: St.Align.MIDDLE
-    });
     this.viewModeBox.add(this.toggleListGridView.actor, {
       x_fill: false,
       y_fill: false,
@@ -4298,11 +4148,6 @@ CinnamenuButton.prototype = {
             this.appsMenuButton.refresh();
           }
         })
-      },
-      {
-        key: 'startup-apps-display',
-        value: 'startupAppsDisplay',
-        cb: null
       },
       {
         key: 'hide-categories',
