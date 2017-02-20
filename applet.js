@@ -876,7 +876,6 @@ PanelMenuButton.prototype = {
     this._applicationsViewMode = this._applet.startupViewMode;
     this._appGridColumns = this._applet.appsGridColumnCount;
     this._appGridButtonWidth = this._applet.appsGridLabelWidth;
-    this._hoverTimeoutId = 0;
     this._searchTimeoutId = 0;
     this._searchIconClickedId = 0;
     this._selectedItemIndex = null;
@@ -900,13 +899,6 @@ PanelMenuButton.prototype = {
 
   on_panel_edit_mode_changed: function() {
     this.actor.reactive = !global.settings.get_boolean('panel-edit-mode')
-  },
-
-  // handler for when PanelMenuButton hotspot leave event
-  _onHotSpotExited: function() {
-    if (this._hoverTimeoutId > 0) {
-      Mainloop.source_remove(this._hoverTimeoutId);
-    }
   },
 
   _onOpenStateToggled: function(menu, open) {
@@ -2800,24 +2792,13 @@ PanelMenuButton.prototype = {
       }
 
       if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-        let hoverDelay = this._applet.categoryHoverDelay;
-        this._hoverTimeoutId = Mainloop.timeout_add((hoverDelay > 0) ? hoverDelay : 0, Lang.bind(this,
-          function() {
-            this._selectCategory(allAppCategory);
-            this._hoverTimeoutId = 0;
-          }));
+        this._selectCategory(allAppCategory);
       }
     }));
     allAppCategory.setButtonLeaveCallback(Lang.bind(this, function() {
       allAppCategory.actor.remove_style_pseudo_class('hover');
       this.selectedAppTitle.set_text('');
       this.selectedAppDescription.set_text('');
-
-      if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-        if (this._hoverTimeoutId > 0) {
-          Mainloop.source_remove(this._hoverTimeoutId);
-        }
-      }
     }));
     allAppCategory.setButtonReleaseCallback(Lang.bind(this, function() {
       this._selectCategory(allAppCategory);
@@ -2882,24 +2863,13 @@ PanelMenuButton.prototype = {
       }
 
       if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-        let hoverDelay = this._applet.categoryHoverDelay;
-        this._hoverTimeoutId = Mainloop.timeout_add((hoverDelay > 0) ? hoverDelay : 0, Lang.bind(this,
-          function() {
-            this._selectCategory(favAppCategory);
-            this._hoverTimeoutId = 0;
-          }));
+        this._selectCategory(favAppCategory);
       }
     }));
     favAppCategory.setButtonLeaveCallback(Lang.bind(this, function() {
       favAppCategory.actor.remove_style_pseudo_class('hover');
       this.selectedAppTitle.set_text('');
       this.selectedAppDescription.set_text('');
-
-      if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-        if (this._hoverTimeoutId > 0) {
-          Mainloop.source_remove(this._hoverTimeoutId);
-        }
-      }
     }));
     favAppCategory.setButtonReleaseCallback(Lang.bind(this, function() {
       this._selectCategory(favAppCategory);
@@ -2951,12 +2921,7 @@ PanelMenuButton.prototype = {
           }
 
           if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-            let hoverDelay = this._applet.categoryHoverDelay;
-            this._hoverTimeoutId = Mainloop.timeout_add((hoverDelay > 0) ? hoverDelay : 0, Lang.bind(this,
-              function() {
-                this._selectCategory(appCategory);
-                this._hoverTimeoutId = 0;
-              }));
+            this._selectCategory(appCategory);
           }
         }));
     };
@@ -2966,12 +2931,6 @@ PanelMenuButton.prototype = {
         appCategory.actor.remove_style_pseudo_class('hover');
         this.selectedAppTitle.set_text('');
         this.selectedAppDescription.set_text('');
-
-        if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-          if (this._hoverTimeoutId > 0) {
-            Mainloop.source_remove(this._hoverTimeoutId);
-          }
-        }
       }));
     };
 
@@ -3029,24 +2988,13 @@ PanelMenuButton.prototype = {
       }
 
       if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-        let hoverDelay = this._applet.categoryHoverDelay;
-        this._hoverTimeoutId = Mainloop.timeout_add((hoverDelay > 0) ? hoverDelay : 0, Lang.bind(this,
-          function() {
-            this._selectAllPlaces(this.placesCategory);
-            this._hoverTimeoutId = 0;
-          }));
+        this._selectAllPlaces(this.placesCategory);
       }
     }));
     this.placesCategory.setButtonLeaveCallback(Lang.bind(this, function() {
       this.placesCategory.actor.remove_style_pseudo_class('hover');
       this.selectedAppTitle.set_text('');
       this.selectedAppDescription.set_text('');
-
-      if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-        if (this._hoverTimeoutId > 0) {
-          Mainloop.source_remove(this._hoverTimeoutId);
-        }
-      }
     }));
     this.placesCategory.setButtonReleaseCallback(Lang.bind(this, function() {
       this._selectAllPlaces(this.placesCategory);
@@ -3068,24 +3016,13 @@ PanelMenuButton.prototype = {
         }
 
         if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-          let hoverDelay = this._applet.categoryHoverDelay;
-          this._hoverTimeoutId = Mainloop.timeout_add((hoverDelay > 0) ? hoverDelay : 0, Lang.bind(this,
-            function() {
-              this._selectRecent(this.recentCategory);
-              this._hoverTimeoutId = 0;
-            }));
+          this._selectRecent(this.recentCategory);
         }
       }));
       this.recentCategory.setButtonLeaveCallback(Lang.bind(this, function() {
         this.recentCategory.actor.remove_style_pseudo_class('hover');
         this.selectedAppTitle.set_text('');
         this.selectedAppDescription.set_text('');
-
-        if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-          if (this._hoverTimeoutId > 0) {
-            Mainloop.source_remove(this._hoverTimeoutId);
-          }
-        }
       }));
       this.recentCategory.setButtonPressCallback(Lang.bind(this, function() {
         this.recentCategory.actor.add_style_class_name('menu-category-button-selected');
@@ -3111,24 +3048,13 @@ PanelMenuButton.prototype = {
       }
 
       if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-        let hoverDelay = this._applet.categoryHoverDelay;
-        this._hoverTimeoutId = Mainloop.timeout_add((hoverDelay > 0) ? hoverDelay : 0, Lang.bind(this,
-          function() {
-            this._selectWebBookmarks(this.webBookmarksCategory);
-            this._hoverTimeoutId = 0;
-          }));
+        this._selectWebBookmarks(this.webBookmarksCategory);
       }
     }));
     this.webBookmarksCategory.setButtonLeaveCallback(Lang.bind(this, function() {
       this.webBookmarksCategory.actor.remove_style_pseudo_class('hover');
       this.selectedAppTitle.set_text('');
       this.selectedAppDescription.set_text('');
-
-      if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-        if (this._hoverTimeoutId > 0) {
-          Mainloop.source_remove(this._hoverTimeoutId);
-        }
-      }
     }));
     this.webBookmarksCategory.setButtonPressCallback(Lang.bind(this, function() {
       this.webBookmarksCategory.actor.add_style_class_name('menu-category-button-selected');

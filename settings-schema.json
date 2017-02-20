@@ -165,15 +165,5 @@
       "Click": 1
     },
     "tooltip": "Method of selecting categories"
-  },
-  "category-hover-delay": {
-    "type": "spinbutton",
-    "default": 0,
-    "min": 0,
-    "max": 500,
-    "step": 1,
-    "units": "milliseconds",
-    "description": "Delay (ms) before selecting category",
-    "tooltip": "Delay in milliseconds before the category is selected when hovering"
   }
 }
