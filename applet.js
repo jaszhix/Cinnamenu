@@ -3325,8 +3325,9 @@ PanelMenuButton.prototype = {
       style_class: ''
     }); //cinnamenu-applications-grid-box
     this.applicationsBoxWrapper = new St.BoxLayout({
-      style_class: ''
-    }); // TBD
+      style_class: '',
+      vertical: true
+    });
     this.applicationsBoxWrapper.add(this.applicationsGridBox, {
       x_fill: false,
       y_fill: false,
