@@ -63,13 +63,6 @@ const ShortcutsDisplay = {
   PLACES: 1
 };
 
-const StartupAppsDisplay = {
-  ALL: 0,
-  //FREQUENT: 1,
-  FAVORITES: 1,
-  NONE: 2
-};
-
 const SelectMethod = {
   HOVER: 0,
   CLICK: 1
@@ -142,23 +135,23 @@ function CategoryListButton() {
 }
 
 CategoryListButton.prototype = {
+  __proto__: PopupMenu.PopupBaseMenuItem.prototype,
 
   _init: function(dir, altNameText, altIconName) {
+    PopupMenu.PopupBaseMenuItem.prototype._init.call(this, {
+      hover: false
+    });
     this.buttonEnterCallback = null;
     this.buttonLeaveCallback = null;
     this.buttonPressCallback = null;
     this.buttonReleaseCallback = null;
     this._ignoreHoverSelect = null;
 
-    let style = 'popup-menu-item popup-submenu-menu-item menu-category-button';
-    this.actor = new St.Button({
-      reactive: true,
-      style_class: style,
-      x_align: St.Align.START,
-      y_align: St.Align.START
-    });
+    this.actor.set_style_class_name('menu-category-button');
+    if (dir === 'recent' || dir === 'bookmarks' || dir === 'places') { // TBD
+      //this.actor.set_style('padding-bottom: -5px');
+    }
     this.actor._delegate = this;
-    this.buttonbox = new St.BoxLayout();
     let iconSize = 16;
 
     this._dir = dir;
@@ -178,9 +171,6 @@ CategoryListButton.prototype = {
       categoryNameText = dirName ? dirName : '';
       if (this.icon_name) {
         this.icon = St.TextureCache.get_default().load_gicon(null, icon, iconSize);
-        if (this.icon) {
-          this.icon.realize();
-        }
       } else {
         icon = dir.get_icon() ? dir.get_icon().get_names().toString() : 'error';
         this.icon = new St.Icon({
@@ -198,26 +188,14 @@ CategoryListButton.prototype = {
         icon_type: St.IconType.FULLCOLOR
       });
     }
-
-    this.buttonbox.add(this.icon, {
-      x_fill: false,
-      y_fill: false,
-      x_align: St.Align.START,
-      y_align: St.Align.MIDDLE
-    });
-
+    this.addActor(this.icon);
+    this.icon.realize();
     this.label = new St.Label({
       text: categoryNameText,
       style_class: 'menu-category-button-label'
     });
-    this.buttonbox.add(this.label, {
-      x_fill: false,
-      y_fill: true,
-      x_align: St.Align.START,
-      y_align: St.Align.MIDDLE
-    });
-
-    this.actor.set_child(this.buttonbox);
+    this.addActor(this.label);
+    this.label.realize();
 
     // Connect signals
     this.actor.connect('touch-event', Lang.bind(this, this._onTouchEvent));
@@ -273,18 +251,16 @@ function ShortcutButton() {
 }
 
 ShortcutButton.prototype = {
+  __proto__: PopupMenu.PopupBaseMenuItem.prototype,
 
   _init: function(_parent, app, appType) {
+    PopupMenu.PopupBaseMenuItem.prototype._init.call(this, {
+      hover: false
+    });
     this._applet = _parent._applet;
     this._app = app;
     this._type = appType;
-    let style = 'popup-menu-item menu-favorites-button';
-    this.actor = new St.Button({
-      reactive: true,
-      style_class: style,
-      x_align: this._applet.shortcutsLabel ? St.Align.START : St.Align.MIDDLE,
-      y_align: St.Align.START
-    });
+    this.actor.set_style_class_name('menu-favorites-button');
     this.actor._delegate = this;
     this._iconSize = (this._applet.shortcutsIconSize > 0) ? this._applet.shortcutsIconSize : 16;
 
@@ -333,26 +309,10 @@ ShortcutButton.prototype = {
         style_class: 'menu-application-button-label'
       });
     }
-    //this.label = new St.Label({ text: app.get_name(), style_class: 'cinnamenu-shortcut-button-label' });
-
-    this.buttonbox = new St.BoxLayout();
-    this.buttonbox.add(this.icon, {
-      x_fill: false,
-      y_fill: false,
-      x_align: St.Align.START,
-      y_align: St.Align.MIDDLE
-    });
-
+    this.addActor(this.icon);
     if (this._applet.shortcutsLabel) {
-      this.buttonbox.add(this.label, {
-        x_fill: false,
-        y_fill: true,
-        x_align: St.Align.START,
-        y_align: St.Align.MIDDLE
-      });
+      this.addActor(this.label);
     }
-
-    this.actor.set_child(this.buttonbox);
 
     // Connect signals
     this.actor.connect('touch-event', Lang.bind(this, this._onTouchEvent));
@@ -889,69 +849,80 @@ function GroupButton() {
 }
 
 GroupButton.prototype = {
+  __proto__: PopupMenu.PopupBaseMenuItem.prototype,
 
-  _init: function(_parent, iconName, iconSize, labelText, params) {
+  _init: function (_parent, iconName, iconSize, labelText, params) {
+    PopupMenu.PopupBaseMenuItem.prototype._init.call(this, {
+      hover: false
+    });
     this._applet = _parent._applet;
     this._opened = false;
     this.buttonEnterCallback = null;
     this.buttonLeaveCallback = null;
     this.buttonPressCallback = null;
     this.buttonReleaseCallback = null;
-    let style = 'popup-menu-item popup-submenu-menu-item' + params.style_class;
-    let paddingTop = labelText ? 2 : iconSize >= 18 ? 5 : 2;
-    this.actor = new St.Button({
-      reactive: true,
-      style_class: style,
-      style: 'padding-top: '+paddingTop.toString()+'px; padding-bottom: '+paddingTop.toString()+'px; padding-right: 10px; padding-left: 10px;',
-      x_align: St.Align.START,
-      y_align: St.Align.MIDDLE
-    });
-    this.actor.add_style_class_name(params.style_class);
-
+    /*let style = 'popup-menu-item popup-submenu-menu-item' + params.style_class;
+    let paddingTop = labelText ? 2 : iconSize >= 18 ? 5 : 2;*/
+    //this.actor.add_style_class_name('menu-favorites-button');
+    //this.actor.add_style_class_name(params.style_class);
+    let monitorHeight = Main.layoutManager.primaryMonitor.height;
+    let realSize = (0.7 * monitorHeight) / 4;
+    let adjustedIconSize = 0.6 * realSize / global.ui_scale;
+    if (adjustedIconSize > iconSize) {
+      adjustedIconSize = iconSize;
+    }
+    this.actor.style = 'padding-top: ' + (adjustedIconSize / 3) + 'px;padding-bottom: ' + (adjustedIconSize / 3) + 'px; margin:auto;'
+    this.actor.add_style_class_name('menu-favorites-button');
     this.actor._delegate = this;
     this.buttonbox = new St.BoxLayout({
       vertical: true
     });
 
     if (iconName && iconSize) {
-      this._iconSize = iconSize;
+      this._iconSize = adjustedIconSize;
       this.icon = new St.Icon({
         icon_name: iconName,
-        icon_size: iconSize
+        icon_size: adjustedIconSize,
+        icon_type: adjustedIconSize <= 25 ? St.IconType.SYMBOLIC : St.IconType.FULLCOLOR
       });
-      this.buttonbox.add(this.icon, {
+      this.addActor(this.icon);
+      this.icon.realize();
+      /*this.buttonbox.add(this.icon, {
         x_fill: false,
         y_fill: false,
         x_align: St.Align.MIDDLE,
         y_align: St.Align.MIDDLE
-      });
+      });*/
     }
     if (labelText) {
       this.label = new St.Label({
         text: labelText,
         style_class: params.style_class + '-label'
       });
-      this.buttonbox.add(this.label, {
+      this.addActor(this.label);
+      /*this.buttonbox.add(this.label, {
         x_fill: false,
         y_fill: false,
         x_align: St.Align.MIDDLE,
         y_align: St.Align.MIDDLE
-      });
+      });*/
     }
-    this.actor.set_child(this.buttonbox);
+    //this.actor.set_child(this.buttonbox);
 
     // Connect signals
     this.actor.connect('touch-event', Lang.bind(this, this._onTouchEvent));
   },
 
   setIcon: function(iconName) {
-    let newIcon = new St.Icon({
-      icon_name: iconName,
-      icon_size: this._iconSize
-    });
-    this.buttonbox.replace_child(this.icon, newIcon);
+    this.removeActor(this.icon);
     this.icon.destroy();
-    this.icon = newIcon;
+    this.icon = this.icon = new St.Icon({
+      icon_name: iconName,
+      icon_size: this._iconSize,
+      icon_type: St.IconType.FULLCOLOR
+    });
+    this.addActor(this.icon);
+    this.icon.realize();
   },
 
   setButtonEnterCallback: function(cb) {
@@ -989,9 +960,12 @@ GroupButton.prototype = {
 
   _onTouchEvent: function(actor, event) {
     return Clutter.EVENT_PROPAGATE;
+  },
+
+  _onButtonReleaseEvent: function(actor) {
+    return false;
   }
 };
-Signals.addSignalMethods(GroupButton.prototype);
 
 
 /* =========================================================================
