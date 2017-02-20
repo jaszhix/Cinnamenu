@@ -155,15 +155,5 @@
     "units": "columns",
     "description": "Number of columns in apps grid",
     "tooltip": "Number of columns in apps grid"
-  },
-  "category-selection-method": {
-    "type": "combobox",
-    "default": 0,
-    "description": "Method of selecting categories",
-    "options": {
-      "Hover": 0,
-      "Click": 1
-    },
-    "tooltip": "Method of selecting categories"
   }
 }

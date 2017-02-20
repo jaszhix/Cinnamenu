@@ -868,7 +868,6 @@ PanelMenuButton.prototype = {
 
     this.applicationsByCategory = {};
     this.favorites = [];
-    this.frequentApps = [];
     this._applications = [];
     this._places = [];
     this._recent = [];
@@ -1399,8 +1398,6 @@ PanelMenuButton.prototype = {
       for (let directory in this.applicationsByCategory) {
         applist = applist.concat(this.applicationsByCategory[directory]);
       }
-    } else if (category_menu_id == 'frequent') {
-      applist = this.frequentApps;
     } else if (category_menu_id == 'favorites') {
       applist = this.favorites;
     } else {
@@ -2676,14 +2673,6 @@ PanelMenuButton.prototype = {
       }
     }
 
-    // Load Frequent Apps
-    // TBD - Cinnamon does not have AppUsage, so we need to find a way to simulate it.
-    /*let mostUsed = this._applet.appSystem.get_all();
-    for (let i=0; i<mostUsed.length; i++) {
-        if (mostUsed[i].get_app_info().should_show())
-            this.frequentApps.push(mostUsed[i]);
-    }*/
-
     // Load Places
     if (PlaceDisplay) {
       if (this._applet.shortcutsDisplay == ShortcutsDisplay.PLACES) {
@@ -2790,10 +2779,6 @@ PanelMenuButton.prototype = {
       if (allAppCategory._ignoreHoverSelect) {
         return;
       }
-
-      if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-        this._selectCategory(allAppCategory);
-      }
     }));
     allAppCategory.setButtonLeaveCallback(Lang.bind(this, function() {
       allAppCategory.actor.remove_style_pseudo_class('hover');
@@ -2807,49 +2792,6 @@ PanelMenuButton.prototype = {
     }));
     this.categoriesBox.add_actor(allAppCategory.actor);
 
-    // Load 'frequent applications' category // TBD
-    /*let freqAppCategory = new CategoryListButton('frequent', _('Frequent Apps'));
-    freqAppCategory.setButtonEnterCallback(Lang.bind(this, function() {
-        freqAppCategory.actor.add_style_class_name('selected');
-        this.selectedAppTitle.set_text(freqAppCategory.label.get_text());
-        this.selectedAppDescription.set_text('');
-
-        if (freqAppCategory._ignoreHoverSelect)
-            return;
-
-        if (this._applet.categorySelectionMethod == SelectMethod.HOVER ) {
-            let hoverDelay = this._applet.categoryHoverDelay;
-            this._hoverTimeoutId = Mainloop.timeout_add((hoverDelay >0) ? hoverDelay : 0, Lang.bind(this, function() {
-                this._selectCategory(freqAppCategory);
-                this._hoverTimeoutId = 0;
-             }));
-        }
-    }));
-    freqAppCategory.setButtonLeaveCallback(Lang.bind(this, function() {
-        freqAppCategory.actor.remove_style_class_name('selected');
-        this.selectedAppTitle.set_text('');
-        this.selectedAppDescription.set_text('');
-
-        if (this._applet.categorySelectionMethod == SelectMethod.HOVER ) {
-            if (this._hoverTimeoutId > 0) {
-                Mainloop.source_remove(this._hoverTimeoutId);
-            }
-        }
-    }));
-    freqAppCategory.setButtonPressCallback(Lang.bind(this, function() {
-        freqAppCategory.actor.add_style_pseudo_class('pressed');
-    }));
-    freqAppCategory.setButtonReleaseCallback(Lang.bind(this, function() {
-        freqAppCategory.actor.remove_style_pseudo_class('pressed');
-        freqAppCategory.actor.remove_style_class_name('selected');
-        this._startupAppsView = StartupAppsDisplay.FREQUENT;
-        this._selectCategory(freqAppCategory);
-        this.selectedAppTitle.set_text(freqAppCategory.label.get_text());
-        this.selectedAppDescription.set_text('');
-    }));
-    this.categoriesBox.add_actor(freqAppCategory.actor);
-    */
-
     // Load 'favorite applications' category
     let favAppCategory = new CategoryListButton('favorites', _('Favorite Apps'), 'address-book-new');
     this.favAppCategory = favAppCategory;
@@ -2860,10 +2802,6 @@ PanelMenuButton.prototype = {
 
       if (favAppCategory._ignoreHoverSelect) {
         return;
-      }
-
-      if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-        this._selectCategory(favAppCategory);
       }
     }));
     favAppCategory.setButtonLeaveCallback(Lang.bind(this, function() {
@@ -2918,10 +2856,6 @@ PanelMenuButton.prototype = {
 
           if (appCategory._ignoreHoverSelect) {
             return;
-          }
-
-          if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-            this._selectCategory(appCategory);
           }
         }));
     };
@@ -2986,10 +2920,6 @@ PanelMenuButton.prototype = {
       if (this.placesCategory._ignoreHoverSelect) {
         return;
       }
-
-      if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-        this._selectAllPlaces(this.placesCategory);
-      }
     }));
     this.placesCategory.setButtonLeaveCallback(Lang.bind(this, function() {
       this.placesCategory.actor.remove_style_pseudo_class('hover');
@@ -3013,10 +2943,6 @@ PanelMenuButton.prototype = {
 
         if (this.recentCategory._ignoreHoverSelect) {
           return;
-        }
-
-        if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-          this._selectRecent(this.recentCategory);
         }
       }));
       this.recentCategory.setButtonLeaveCallback(Lang.bind(this, function() {
@@ -3045,10 +2971,6 @@ PanelMenuButton.prototype = {
 
       if (this.webBookmarksCategory._ignoreHoverSelect) {
         return;
-      }
-
-      if (this._applet.categorySelectionMethod == SelectMethod.HOVER) {
-        this._selectWebBookmarks(this.webBookmarksCategory);
       }
     }));
     this.webBookmarksCategory.setButtonLeaveCallback(Lang.bind(this, function() {
@@ -3624,15 +3546,6 @@ CinnamenuButton.prototype = {
       {
         key: 'apps-grid-column-count',
         value: 'appsGridColumnCount',
-        cb: Lang.bind(this, function() {
-          if (this.appsMenuButton) {
-            this.appsMenuButton.refresh();
-          }
-        })
-      },
-      {
-        key: 'category-selection-method',
-        value: 'categorySelectionMethod',
         cb: Lang.bind(this, function() {
           if (this.appsMenuButton) {
             this.appsMenuButton.refresh();
