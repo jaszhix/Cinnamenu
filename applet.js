@@ -878,9 +878,15 @@ PanelMenuButton.prototype = {
     this._clearApplicationsBox(button);
     let category = button._dir;
     if (typeof category == 'string') {
-      this._displayApplications(this._listApplications(category), ApplicationType._applications);
+      this._displayApplications([{
+        apps: this._listApplications(category),
+        appType: ApplicationType._applications
+      }]);
     } else {
-      this._displayApplications(this._listApplications(category.get_menu_id()), ApplicationType._applications);
+      this._displayApplications([{
+        apps: this._listApplications(category.get_menu_id()),
+        appType: ApplicationType._applications
+      }]);
     }
 
     // Cache the current category button so we can invoke this function to get around the list/grid toggle
@@ -894,7 +900,10 @@ PanelMenuButton.prototype = {
     this._clearApplicationsBox(button);
 
     let favorites = this.favorites;
-    this._displayApplications(favorites, ApplicationType._applications);
+    this._displayApplications([{
+      apps: favorites,
+      appType: ApplicationType._applications
+    }]);
     this._currentSelectKey = '_selectFavorites';
     this._currentCategoryButton = button;
   },
@@ -908,7 +917,10 @@ PanelMenuButton.prototype = {
     let devices = this._listDevices();
 
     let allPlaces = places.concat(bookmarks.concat(devices));
-    this._displayApplications(allPlaces, ApplicationType._places);
+    this._displayApplications([{
+      apps: allPlaces,
+      appType: ApplicationType._places
+    }]);
     this._currentSelectKey = '_selectAllPlaces';
     this._currentCategoryButton = button;
   },
@@ -918,7 +930,10 @@ PanelMenuButton.prototype = {
     this._clearApplicationsBox(button);
 
     let bookmarks = this._listBookmarks();
-    this._displayApplications(bookmarks, ApplicationType._places);
+    this._displayApplications([{
+      apps: bookmarks,
+      appType: ApplicationType._places
+    }]);
     this._currentSelectKey = '_selectBookmarks';
     this._currentCategoryButton = button;
   },
@@ -928,7 +943,10 @@ PanelMenuButton.prototype = {
     this._clearApplicationsBox(button);
 
     let devices = this._listDevices();
-    this._displayApplications(devices, ApplicationType._places);
+    this._displayApplications([{
+      apps: devices,
+      appType: ApplicationType._places
+    }]);
     this._currentSelectKey = '_selectDevices';
     this._currentCategoryButton = button;
   },
@@ -938,7 +956,10 @@ PanelMenuButton.prototype = {
     this._clearApplicationsBox(button);
 
     let recent = this._listRecent();
-    this._displayApplications(recent, ApplicationType._recent);
+    this._displayApplications([{
+      apps: recent,
+      appType: ApplicationType._recent
+    }]);
     this._currentSelectKey = '_selectRecent';
     this._currentCategoryButton = button;
   },
@@ -948,7 +969,10 @@ PanelMenuButton.prototype = {
     this._clearApplicationsBox(button);
 
     let webBookmarks = this._listWebBookmarks();
-    this._displayApplications(webBookmarks, ApplicationType._places);
+    this._displayApplications([{
+      apps: webBookmarks,
+      appType: ApplicationType._places
+    }]);
     this._currentSelectKey = '_selectWebBookmarks';
     this._currentCategoryButton = button;
   },
@@ -979,7 +1003,7 @@ PanelMenuButton.prototype = {
     }
 
     this._clearApplicationsBox(null, refresh);
-    this._displayApplications(null, null, refresh);
+    this._displayApplications(null, refresh);
   },
 
   _clearCategorySelections: function(container, selectedCategory) {
@@ -1688,7 +1712,7 @@ PanelMenuButton.prototype = {
     this._selectCategory(this.favAppCategory);
   },
 
-  _displayApplications: function(apps, appType, refresh) {
+  _displayApplications: function(appList, refresh) {
     let viewMode = this._applicationsViewMode;
 
     // variables for icon grid layout
@@ -1766,7 +1790,13 @@ PanelMenuButton.prototype = {
       }));
     };
 
-    if (apps) {
+    if (!appList) {
+      return
+    }
+
+    for (let z = 0, len = appList.length; z < len; z++) {
+      let apps = appList[z].apps;
+      let appType = appList[z].appType;
       for (let appTypeKey in ApplicationType) {
         if (ApplicationType[appTypeKey] !== appType) {
           continue;
@@ -1806,8 +1836,7 @@ PanelMenuButton.prototype = {
           if (!refresh) {
             this[appTypeKey][app] = app;
           }
-        }
-        
+        } 
       }
     }
   },
@@ -2199,12 +2228,22 @@ PanelMenuButton.prototype = {
 
 
     this._clearApplicationsBox();
-    this._displayApplications(appResults, ApplicationType._applications);
-    this._displayApplications(placesResults, ApplicationType._places);
-    this._displayApplications(recentResults, ApplicationType._recent);
+    this._displayApplications([
+      {
+        apps: appResults,
+        appType: ApplicationType._applications
+      },
+      {
+        apps: placesResults,
+        appType: ApplicationType._places
+      },
+      {
+        apps: recentResults,
+        appType: ApplicationType._recent
+      },
+    ]);
 
-    this._activeContainer = (this._applicationsViewMode == ApplicationsViewMode.LIST) ? this.applicationsListBox :
-      this.applicationsGridBox;
+    this._activeContainer = (this._applicationsViewMode == ApplicationsViewMode.LIST) ? this.applicationsListBox : this.applicationsGridBox;
     this.selectActiveContainerItem(null, null, true);
 
     return false;
@@ -3224,11 +3263,6 @@ CinnamenuButton.prototype = {
             this.appsMenuButton.refresh();
           }
         })
-      },
-      {
-        key: 'category-hover-delay',
-        value: 'categoryHoverDelay',
-        cb: null
       },
       {
         key: 'shortcuts-icon-size',
