@@ -27,9 +27,9 @@ const Cinnamon = imports.gi.Cinnamon;
 const Util = imports.misc.util;
 const Mainloop = imports.mainloop;
 const Lang = imports.lang;
+const FileUtils = imports.misc.fileUtils;
 const Signals = imports.signals;
 const Params = imports.misc.params;
-const Config = imports.misc.config;
 const GnomeSession = imports.misc.gnomeSession;
 const ScreenSaver = imports.misc.screenSaver;
 const AppFavorites = imports.ui.appFavorites;
@@ -54,9 +54,9 @@ const _ = Gettext.gettext;
 
 const PlaceDisplay = AppletDir.placeDisplay;
 
-const PREFS_DIALOG = 'cinnamon-settings applets Cinnamenu@json';
 const PRIVACY_SCHEMA = 'org.cinnamon.desktop.privacy';
 const REMEMBER_RECENT_KEY = 'remember-recent-files';
+const USER_DESKTOP_PATH = FileUtils.getUserDesktopDir();
 
 const ShortcutsDisplay = {
   FAVORITES: 0,
@@ -69,9 +69,9 @@ const SelectMethod = {
 };
 
 const ApplicationType = {
-  APPLICATION: 0,
-  PLACE: 1,
-  RECENT: 2
+  _applications: 0,
+  _places: 1,
+  _recent: 2
 };
 
 const ApplicationsViewMode = {
@@ -265,13 +265,13 @@ ShortcutButton.prototype = {
     this._iconSize = (this._applet.shortcutsIconSize > 0) ? this._applet.shortcutsIconSize : 16;
 
     // appType 0 = application, appType 1 = place, appType 2 = recent
-    if (appType == ApplicationType.APPLICATION) {
+    if (appType == ApplicationType._applications) {
       this.icon = app.create_icon_texture(this._iconSize);
       this.label = new St.Label({
         text: app.get_name(),
         style_class: 'menu-application-button-label'
       });
-    } else if (appType == ApplicationType.PLACE) {
+    } else if (appType == ApplicationType._places) {
       // Adjust 'places' symbolic icons by reducing their size
       // and setting a special class for button padding
       this._iconSize -= 4;
@@ -291,7 +291,7 @@ ShortcutButton.prototype = {
         text: app.name,
         style_class: 'menu-application-button-label'
       });
-    } else if (appType == ApplicationType.RECENT) {
+    } else if (appType == ApplicationType._recent) {
       let gicon = Gio.content_type_get_icon(app.mime);
       this.icon = new St.Icon({
         gicon: gicon,
@@ -345,14 +345,14 @@ ShortcutButton.prototype = {
 
   getDragActor: function() {
     let appIcon;
-    if (this._type == ApplicationType.APPLICATION) {
+    if (this._type == ApplicationType._applications) {
       appIcon = this._app.create_icon_texture(this._iconSize);
-    } else if (this._type == ApplicationType.PLACE) {
+    } else if (this._type == ApplicationType._places) {
       appIcon = new St.Icon({
         gicon: this._app.icon,
         icon_size: this._iconSize
       });
-    } else if (this._type == ApplicationType.RECENT) {
+    } else if (this._type == ApplicationType._recent) {
       let gicon = Gio.content_type_get_icon(this._app.mime);
       appIcon = new St.Icon({
         gicon: gicon,
@@ -374,15 +374,15 @@ ShortcutButton.prototype = {
       timestamp: 0
     });
 
-    if (this._type == ApplicationType.APPLICATION) {
+    if (this._type == ApplicationType._applications) {
       this._app.open_new_window(params.workspace);
-    } else if (this._type == ApplicationType.PLACE) {
+    } else if (this._type == ApplicationType._places) {
       if (this._app.uri) {
         this._app.app.launch_uris([this._app.uri], null);
       } else {
         this._app.launch();
       }
-    } else if (this._type == ApplicationType.RECENT) {
+    } else if (this._type == ApplicationType._recent) {
       Gio.app_info_launch_default_for_uri(this._app.uri, global.create_app_launch_context(0, -1));
     }
 
@@ -397,6 +397,89 @@ ShortcutButton.prototype = {
   }
 };
 
+/*function ApplicationContextMenuItem(appButton, label, action, iconName) {
+  this._init(appButton, label, action, iconName);
+}
+
+ApplicationContextMenuItem.prototype = {
+  __proto__: PopupMenu.PopupBaseMenuItem.prototype,
+
+  _init: function (appButton, label, action, iconName) {
+    PopupMenu.PopupBaseMenuItem.prototype._init.call(this, {
+      focusOnHover: false
+    });
+
+    this._appButton = appButton;
+    this._action = action;
+    this.label = new St.Label({
+      text: label
+    });
+    if (iconName !== null) {
+      this.icon = new St.Icon({
+        icon_name: iconName,
+        icon_size: 12,
+        icon_type: St.IconType.SYMBOLIC
+      });
+      if (this.icon) {
+        this.addActor(this.icon);
+        this.icon.realize();
+      }
+    }
+
+    this.addActor(this.label);
+  },
+
+  activate: function (event) {
+    switch (this._action) {
+    case 'add_to_panel':
+      if (!Main.AppletManager.get_role_provider_exists(Main.AppletManager.Roles.PANEL_LAUNCHER)) {
+        let new_applet_id = global.settings.get_int('next-applet-id');
+        global.settings.set_int('next-applet-id', (new_applet_id + 1));
+        let enabled_applets = global.settings.get_strv('enabled-applets');
+        enabled_applets.push('panel1:right:0:panel-launchers@cinnamon.org:' + new_applet_id);
+        global.settings.set_strv('enabled-applets', enabled_applets);
+      }
+
+      let launcherApplet = Main.AppletManager.get_role_provider(Main.AppletManager.Roles.PANEL_LAUNCHER);
+      launcherApplet.acceptNewLauncher(this._appButton.app.get_id());
+
+      this._appButton.toggleMenu();
+      break;
+    case 'add_to_desktop':
+      let file = Gio.file_new_for_path(this._appButton.app.get_app_info().get_filename());
+      let destFile = Gio.file_new_for_path(`${USER_DESKTOP_PATH}/${this._appButton.app.get_id()}`);
+      try {
+        file.copy(destFile, 0, null, function () {});
+        try {
+          FileUtils.changeModeGFile(destFile, 755);
+        } catch (e) {
+          Util.spawnCommandLine(`chmod +x '${USER_DESKTOP_PATH}/${this._appButton.app.get_id()}'`);
+        }
+      } catch (e) {
+        global.log(e);
+      }
+      this._appButton.toggleMenu();
+      break;
+    case 'add_to_favorites':
+      AppFavorites.getAppFavorites().addFavorite(this._appButton.app.get_id());
+      this._appButton.toggleMenu();
+      break;
+    case 'remove_from_favorites':
+      AppFavorites.getAppFavorites().removeFavorite(this._appButton.app.get_id());
+      this._appButton.toggleMenu();
+      break;
+    case 'uninstall':
+      Util.spawnCommandLine(`gksu -m '${_('Please provide your password to uninstall this application')}' /usr/bin/cinnamon-remove-application '${this._appButton.app.get_app_info().get_filename()}'`);
+      this._appButton.appsMenuButton.menu.close();
+      break;
+    case 'run_with_nvidia_gpu':
+      Util.spawnCommandLine(`optirun gtk-launch ${this._appButton.app.get_id()}`);
+      this._appButton.appsMenuButton.menu.close();
+      break;
+    }
+    return false;
+  }
+};*/
 
 /* =========================================================================
 /* name:    AppListGridButton
@@ -532,10 +615,9 @@ AppListGridButton.prototype = {
 
     // Connect signals
     this.actor.connect('touch-event', Lang.bind(this, this._onTouchEvent));
-    if (appType == ApplicationType.APPLICATION) {
+    if (appType == ApplicationType._applications) {
       this._stateChangedId = this._app.connect('notify::state', Lang.bind(this, this._onStateChanged));
     }
-
 
     // Check if running state
     this._dot.opacity = 0;
@@ -547,7 +629,7 @@ AppListGridButton.prototype = {
   },
 
   _onStateChanged: function() {
-    if (this._type == ApplicationType.APPLICATION) {
+    if (this._type == ApplicationType._applications) {
       if (this._app.state != Cinnamon.AppState.STOPPED) {
         this._dot.opacity = 255;
       } else {
@@ -558,14 +640,14 @@ AppListGridButton.prototype = {
 
   getDragActor: function() {
     let appIcon;
-    if (this._type == ApplicationType.APPLICATION) {
+    if (this._type == ApplicationType._applications) {
       appIcon = this._app.create_icon_texture(this._iconSize);
-    } else if (this._type == ApplicationType.PLACE) {
+    } else if (this._type == ApplicationType._places) {
       appIcon = new St.Icon({
         gicon: this._app.icon,
         icon_size: this._iconSize
       });
-    } else if (this._type == ApplicationType.RECENT) {
+    } else if (this._type == ApplicationType._recent) {
       let gicon = Gio.content_type_get_icon(this._app.mime);
       appIcon = new St.Icon({
         gicon: gicon,
@@ -587,15 +669,15 @@ AppListGridButton.prototype = {
       timestamp: 0
     });
 
-    if (this._type == ApplicationType.APPLICATION) {
+    if (this._type == ApplicationType._applications) {
       this._app.open_new_window(params.workspace);
-    } else if (this._type == ApplicationType.PLACE) {
+    } else if (this._type == ApplicationType._places) {
       if (this._app.uri) {
         this._app.app.launch_uris([this._app.uri], null);
       } else {
         this._app.launch();
       }
-    } else if (this._type == ApplicationType.RECENT) {
+    } else if (this._type == ApplicationType._recent) {
       Gio.app_info_launch_default_for_uri(this._app.uri, global.create_app_launch_context(0, -1));
     }
 
@@ -1010,9 +1092,9 @@ PanelMenuButton.prototype = {
     this._clearApplicationsBox(button);
     let category = button._dir;
     if (typeof category == 'string') {
-      this._displayApplications(this._listApplications(category));
+      this._displayApplications(this._listApplications(category), ApplicationType._applications);
     } else {
-      this._displayApplications(this._listApplications(category.get_menu_id()));
+      this._displayApplications(this._listApplications(category.get_menu_id()), ApplicationType._applications);
     }
 
     // Cache the current category button so we can invoke this function to get around the list/grid toggle
@@ -1026,7 +1108,7 @@ PanelMenuButton.prototype = {
     this._clearApplicationsBox(button);
 
     let favorites = this.favorites;
-    this._displayApplications(favorites);
+    this._displayApplications(favorites, ApplicationType._applications);
     this._currentSelectKey = '_selectFavorites';
     this._currentCategoryButton = button;
   },
@@ -1040,7 +1122,7 @@ PanelMenuButton.prototype = {
     let devices = this._listDevices();
 
     let allPlaces = places.concat(bookmarks.concat(devices));
-    this._displayApplications(null, allPlaces);
+    this._displayApplications(allPlaces, ApplicationType._places);
     this._currentSelectKey = '_selectAllPlaces';
     this._currentCategoryButton = button;
   },
@@ -1050,7 +1132,7 @@ PanelMenuButton.prototype = {
     this._clearApplicationsBox(button);
 
     let bookmarks = this._listBookmarks();
-    this._displayApplications(null, bookmarks);
+    this._displayApplications(bookmarks, ApplicationType._places);
     this._currentSelectKey = '_selectBookmarks';
     this._currentCategoryButton = button;
   },
@@ -1060,7 +1142,7 @@ PanelMenuButton.prototype = {
     this._clearApplicationsBox(button);
 
     let devices = this._listDevices();
-    this._displayApplications(null, devices);
+    this._displayApplications(devices, ApplicationType._places);
     this._currentSelectKey = '_selectDevices';
     this._currentCategoryButton = button;
   },
@@ -1070,7 +1152,7 @@ PanelMenuButton.prototype = {
     this._clearApplicationsBox(button);
 
     let recent = this._listRecent();
-    this._displayApplications(null, null, recent);
+    this._displayApplications(recent, ApplicationType._recent);
     this._currentSelectKey = '_selectRecent';
     this._currentCategoryButton = button;
   },
@@ -1080,7 +1162,7 @@ PanelMenuButton.prototype = {
     this._clearApplicationsBox(button);
 
     let webBookmarks = this._listWebBookmarks();
-    this._displayApplications(null, webBookmarks);
+    this._displayApplications(webBookmarks, ApplicationType._places);
     this._currentSelectKey = '_selectWebBookmarks';
     this._currentCategoryButton = button;
   },
@@ -1111,7 +1193,7 @@ PanelMenuButton.prototype = {
     }
 
     this._clearApplicationsBox(null, refresh);
-    this._displayApplications(null, null, null, refresh);
+    this._displayApplications(null, null, refresh);
   },
 
   _clearCategorySelections: function(container, selectedCategory) {
@@ -1722,13 +1804,13 @@ PanelMenuButton.prototype = {
         right: themeNode.get_padding(St.Side.RIGHT),
       };
 
-      let appType = ApplicationType.APPLICATION;
+      let appType = ApplicationType._applications;
       let allAppCategoryButton = this.categoriesBox.get_child_at_index(1)._delegate;
       let allAppcategory = allAppCategoryButton._dir;
       let apps = this._listApplications(allAppcategory);
       if (apps && apps.length > 0) {
         let app = apps[0];
-        let appGridButton = new AppGridButton(this, app, appType, true);
+        let appGridButton = new AppListGridButton(this, app, appType, true);
         let gridLayout = this.applicationsGridBox.layout_manager;
         gridLayout.pack(appGridButton.actor, 0, 0);
         if (appGridButton.actor.get_stage()) {
@@ -1845,25 +1927,18 @@ PanelMenuButton.prototype = {
     }*/
   },
 
-  _displayApplications: function(apps, places, recent, refresh) {
+  _displayApplications: function(apps, appType, refresh) {
     let viewMode = this._applicationsViewMode;
-    let appType;
 
     // variables for icon grid layout
     //let page = 0;
     let column = 0;
     let rownum = 0;
 
-    if (refresh) {
-      apps = this._applications;
-    } else {
-      this._applications = [];
-    }
-
     let appButtonEnterEvent = (appListButton, appType)=>{
       appListButton.actor.connect('enter-event', Lang.bind(this, function() {
         appListButton.actor.add_style_class_name('menu-application-button-selected');
-        if (appType === ApplicationType.APPLICATION) {
+        if (appType === ApplicationType._applications) {
           this.selectedAppTitle.set_text(appListButton._app.get_name());
           if (appListButton._app.get_description()) {
             this.selectedAppDescription.set_text(appListButton._app.get_description());
@@ -1905,147 +1980,74 @@ PanelMenuButton.prototype = {
     };
 
     let appButtonButtonReleaseEvent = (appListButton, appType, app)=>{
-      appListButton.actor.connect('button-release-event', Lang.bind(this, function() {
+      appListButton.actor.connect('button-release-event', Lang.bind(this, function(actor, e) {
         appListButton.actor.remove_style_pseudo_class('pressed');
-        this.selectedAppTitle.set_text('');
-        this.selectedAppDescription.set_text('');
-        if (appType === ApplicationType.APPLICATION) {
-          appListButton._app.open_new_window(-1);
-        } else if (appType === ApplicationType.PLACE) {
-          if (app.uri) {
-            appListButton._app.app.launch_uris([app.uri], null);
-          } else {
-            appListButton._app.launch();
+        let button = e.get_button();
+        if (button === 1) {
+          this.selectedAppTitle.set_text('');
+          this.selectedAppDescription.set_text('');
+          if (appType === ApplicationType._applications) {
+            appListButton._app.open_new_window(-1);
+          } else if (appType === ApplicationType._places) {
+            if (app.uri) {
+              appListButton._app.app.launch_uris([app.uri], null);
+            } else {
+              appListButton._app.launch();
+            }
+          } else if (appType === ApplicationType._recent) {
+            Gio.app_info_launch_default_for_uri(app.uri, global.create_app_launch_context(0, -1));
           }
-        } else if (appType === ApplicationType.RECENT) {
-          Gio.app_info_launch_default_for_uri(app.uri, global.create_app_launch_context(0, -1));
+          this.menu.close();
+        } else if (button === 2) {
+          //this.shortcutsBox.add_actor(shortcutButton.actor);
         }
-        this.menu.close();
       }));
     };
 
     if (apps) {
-      appType = ApplicationType.APPLICATION;
-      for (let i = 0, len = apps.length; i < len; i++) {
-        let app = apps[i];
-        // only add if not already in this._applications or refreshing
-        if (refresh || !this._applications[app]) {
-          if (viewMode == ApplicationsViewMode.LIST) { // ListView
-            let appListButton = new AppListButton(this, app, appType);
-            appButtonEnterEvent(appListButton, appType);
-            appButtonLeaveEvent(appListButton)
-            appButtonButtonPressEvent(appListButton);
-            appButtonButtonReleaseEvent(appListButton, appType, app);
-            this.applicationsListBox.add_actor(appListButton.actor);
-          } else { // GridView
-            let includeTextLabel = (this._applet.appsGridLabelWidth > 0) ? true : false;
-            let appGridButton = new AppGridButton(this, app, appType, includeTextLabel);
-            appGridButton.buttonbox.width = this._appGridButtonWidth;
-            appButtonEnterEvent(appGridButton, appType);
-            appButtonLeaveEvent(appGridButton)
-            appButtonButtonPressEvent(appGridButton);
-            appButtonButtonReleaseEvent(appGridButton, appType, app);
-            let gridLayout = this.applicationsGridBox.layout_manager;
-            gridLayout.pack(appGridButton.actor, column, rownum);
-            column++;
-            if (column > this._appGridColumns - 1) {
-              column = 0;
-              rownum++;
+      for (let appTypeKey in ApplicationType) {
+        if (ApplicationType[appTypeKey] !== appType) {
+          continue;
+        }
+        if (refresh) {
+          apps = this[appTypeKey];
+        } else {
+          this[appTypeKey] = [];
+        }
+        for (let i = 0, len = apps.length; i < len; i++) {
+          let app = apps[i];
+          // only add if not already in this._applications or refreshing
+          if (refresh || !this._applications[app]) {
+            if (viewMode == ApplicationsViewMode.LIST) { // ListView
+              let appListButton = new AppListGridButton(this, app, appType, false);
+              appButtonEnterEvent(appListButton, appType);
+              appButtonLeaveEvent(appListButton)
+              appButtonButtonPressEvent(appListButton);
+              appButtonButtonReleaseEvent(appListButton, appType, app);
+              this.applicationsListBox.add_actor(appListButton.actor);
+            } else { // GridView
+              let appGridButton = new AppListGridButton(this, app, appType, true);
+              appGridButton.buttonbox.width = this._appGridButtonWidth;
+              appButtonEnterEvent(appGridButton, appType);
+              appButtonLeaveEvent(appGridButton)
+              appButtonButtonPressEvent(appGridButton);
+              appButtonButtonReleaseEvent(appGridButton, appType, app);
+              let gridLayout = this.applicationsGridBox.layout_manager;
+              gridLayout.pack(appGridButton.actor, column, rownum);
+              column++;
+              if (column > this._appGridColumns - 1) {
+                column = 0;
+                rownum++;
+              }
             }
           }
-        }
-        if (!refresh) {
-          this._applications[app] = app;
-        }
-      }
-    }
-
-
-    if (refresh) {
-      places = this._places;
-    } else {
-      this._places = [];
-    }
-
-    if (places) {
-      appType = ApplicationType.PLACE;
-      for (let i = 0, len = places.length; i < len; i++) {
-        let app = places[i];
-        // only add if not already in this._places or refreshing
-        if (refresh || !this._places[app.name]) {
-          if (viewMode == ApplicationsViewMode.LIST) { // ListView
-            let appListButton = new AppListButton(this, app, appType);
-            appButtonEnterEvent(appListButton, appType);
-            appButtonLeaveEvent(appListButton)
-            appButtonButtonPressEvent(appListButton);
-            appButtonButtonReleaseEvent(appListButton, appType, app);
-            this.applicationsListBox.add_actor(appListButton.actor);
-          } else { // GridView
-            let appGridButton = new AppGridButton(this, app, appType, true);
-            appGridButton.buttonbox.width = this._appGridButtonWidth;
-            appButtonEnterEvent(appGridButton, appType);
-            appButtonLeaveEvent(appGridButton)
-            appButtonButtonPressEvent(appGridButton, appType, app);
-            appButtonButtonReleaseEvent(appGridButton, appType, app);
-            let gridLayout = this.applicationsGridBox.layout_manager;
-            gridLayout.pack(appGridButton.actor, column, rownum);
-            column++;
-            if (column > this._appGridColumns - 1) {
-              column = 0;
-              rownum++;
-            }
+          if (!refresh) {
+            this[appTypeKey][app] = app;
           }
         }
-        if (!refresh) {
-          this._places[app.name] = app;
-        }
+        
       }
     }
-
-
-
-    if (refresh) {
-      recent = this._recent;
-    } else {
-      this._recent = [];
-    }
-
-    if (recent) {
-      appType = ApplicationType.RECENT;
-      for (let i = 0, len = recent.length; i < len; i++) {
-        let app = recent[i];
-        // only add if not already in this._recent or refreshing
-        if (refresh || !this._recent[app.name]) {
-          if (viewMode == ApplicationsViewMode.LIST) { // ListView
-            let appListButton = new AppListButton(this, app, appType);
-            appButtonEnterEvent(appListButton, appType);
-            appButtonLeaveEvent(appListButton)
-            appButtonButtonPressEvent(appListButton);
-            appButtonButtonReleaseEvent(appListButton, appType, app);
-            this.applicationsListBox.add_actor(appListButton.actor);
-          } else { // GridView
-            let appGridButton = new AppGridButton(this, app, appType, true);
-            appGridButton.buttonbox.width = this._appGridButtonWidth;
-            appGridButton.buttonbox.width = this._appGridButtonWidth;
-            appButtonEnterEvent(appGridButton, appType);
-            appButtonLeaveEvent(appGridButton)
-            appButtonButtonPressEvent(appGridButton);
-            appButtonButtonReleaseEvent(appGridButton, appType, app);
-            let gridLayout = this.applicationsGridBox.layout_manager;
-            gridLayout.pack(appGridButton.actor, column, rownum);
-            column++;
-            if (column > this._appGridColumns - 1) {
-              column = 0;
-              rownum++;
-            }
-          }
-        }
-        if (!refresh) {
-          this._recent[app.name] = app;
-        }
-      }
-    }
-
   },
 
   _scrollToActiveContainerButton: function(buttonActor) {
@@ -2281,17 +2283,17 @@ PanelMenuButton.prototype = {
         this._activeContainer == this.shortcutsBox) {
         // Launch application or Nautilus place or Recent document
         let item_actor = children[this._selectedItemIndex];
-        if (item_actor._delegate._type == ApplicationType.APPLICATION) {
+        if (item_actor._delegate._type == ApplicationType._applications) {
           this.menu.close();
           item_actor._delegate._app.open_new_window(-1);
-        } else if (item_actor._delegate._type == ApplicationType.PLACE) {
+        } else if (item_actor._delegate._type == ApplicationType._places) {
           this.menu.close();
           if (item_actor._delegate._app.uri) {
             item_actor._delegate._app.app.launch_uris([item_actor._delegate._app.uri], null);
           } else {
             item_actor._delegate._app.launch();
           }
-        } else if (item_actor._delegate._type == ApplicationType.RECENT) {
+        } else if (item_actor._delegate._type == ApplicationType._recent) {
           this.menu.close();
           Gio.app_info_launch_default_for_uri(item_actor._delegate._app.uri, global.create_app_launch_context(0, -1));
         }
@@ -2346,21 +2348,21 @@ PanelMenuButton.prototype = {
     // Set selected app name/description
     if (this._activeContainer == this.shortcutsBox || this._activeContainer == this.applicationsListBox || this._activeContainer ==
       this.applicationsGridBox) {
-      if (itemActor._delegate._type == ApplicationType.APPLICATION) {
+      if (itemActor._delegate._type == ApplicationType._applications) {
         this.selectedAppTitle.set_text(itemActor._delegate._app.get_name());
         if (itemActor._delegate._app.get_description()) {
           this.selectedAppDescription.set_text(itemActor._delegate._app.get_description());
         } else {
           this.selectedAppDescription.set_text('');
         }
-      } else if (itemActor._delegate._type == ApplicationType.PLACE) {
+      } else if (itemActor._delegate._type == ApplicationType._places) {
         this.selectedAppTitle.set_text(itemActor._delegate._app.name);
         if (itemActor._delegate._app.description) {
           this.selectedAppDescription.set_text(itemActor._delegate._app.description);
         } else {
           this.selectedAppDescription.set_text('');
         }
-      } else if (itemActor._delegate._type == ApplicationType.RECENT) {
+      } else if (itemActor._delegate._type == ApplicationType._recent) {
         this.selectedAppTitle.set_text(itemActor._delegate._app.name);
         if (itemActor._delegate._app.description) {
           this.selectedAppDescription.set_text(itemActor._delegate._app.description);
@@ -2479,7 +2481,9 @@ PanelMenuButton.prototype = {
 
 
     this._clearApplicationsBox();
-    this._displayApplications(appResults, placesResults, recentResults);
+    this._displayApplications(appResults, ApplicationType._applications);
+    this._displayApplications(placesResults, ApplicationType._places);
+    this._displayApplications(recentResults, ApplicationType._recent);
 
     this._activeContainer = (this._applicationsViewMode == ApplicationsViewMode.LIST) ? this.applicationsListBox :
       this.applicationsGridBox;
@@ -2757,10 +2761,10 @@ PanelMenuButton.prototype = {
       let devices = this._listDevices();
       let allPlaces = places.concat(bookmarks.concat(devices));
       shortcuts = allPlaces;
-      shortcutType = ApplicationType.PLACE;
+      shortcutType = ApplicationType._places;
     } else {
       shortcuts = this.favorites;
-      shortcutType = ApplicationType.APPLICATION;
+      shortcutType = ApplicationType._applications;
     }
 
     let shortcutButtonEnterEvent = (shortcutButton)=>{
