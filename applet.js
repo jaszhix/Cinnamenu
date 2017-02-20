@@ -399,41 +399,62 @@ ShortcutButton.prototype = {
 
 
 /* =========================================================================
-/* name:    AppListButton
+/* name:    AppListGridButton
  * @desc    A button with an icon and label that holds app info for various
  * @desc    types of sources (application, places, recent)
  * ========================================================================= */
 
-function AppListButton() {
+function AppListGridButton() {
   this._init.apply(this, arguments);
 }
 
-AppListButton.prototype = {
+AppListGridButton.prototype = {
+  _init: function(_parent, app, appType, isGridType) {
 
-  _init: function(_parent, app, appType) {
     this._parent = _parent;
     this._applet = _parent._applet;
     this._app = app;
     this._type = appType;
     this._stateChangedId = 0;
-    let style = 'menu-application-button';
+    let style;
+    if (isGridType) {
+      style = 'popup-menu-item';
+      if (this._applet.appsGridColumnCount === 3) {
+        style += ' col3';
+      } else if (this._applet.appsGridColumnCount === 4) {
+        style += ' col4';
+      } else if (this._applet.appsGridColumnCount === 5) {
+        style += ' col5';
+      } else if (this._applet.appsGridColumnCount === 6) {
+        style += ' col6';
+      } else if (this._applet.appsGridColumnCount === 7) {
+        style += ' col7';
+      }
+
+      this._iconSize = (this._applet.appsGridIconSize > 0) ? this._applet.appsGridIconSize : 64;
+    } else {
+      style = 'menu-application-button';
+      this._iconSize = (this._applet.appsListIconSize > 0) ? this._applet.appsListIconSize : 28;
+      this._iconContainer = new St.BoxLayout({
+        vertical: true
+      });
+    }
     this.actor = new St.Button({
       reactive: true,
       style_class: style,
-      x_align: St.Align.START,
+      x_align: isGridType ? St.Align.MIDDLE : St.Align.START,
       y_align: St.Align.MIDDLE
     });
     this.actor._delegate = this;
-    this._iconSize = (this._applet.appsListIconSize > 0) ? this._applet.appsListIconSize : 28;
 
     // appType 0 = application, appType 1 = place, appType 2 = recent
-    if (appType == ApplicationType.APPLICATION) {
+    if (appType == ApplicationType._applications) {
       this.icon = app.create_icon_texture(this._iconSize);
       this.label = new St.Label({
         text: app.get_name(),
         style_class: 'menu-application-button-label'
       });
-    } else if (appType == ApplicationType.PLACE) {
+    } else if (appType == ApplicationType._places) {
       this.icon = new St.Icon({
         gicon: app.icon,
         icon_size: this._iconSize
@@ -449,7 +470,7 @@ AppListButton.prototype = {
         text: app.name,
         style_class: 'menu-application-button-label'
       });
-    } else if (appType == ApplicationType.RECENT) {
+    } else if (appType == ApplicationType._recent) {
       let gicon = Gio.content_type_get_icon(app.mime);
       this.icon = new St.Icon({
         gicon: gicon,
@@ -465,237 +486,6 @@ AppListButton.prototype = {
       this.label = new St.Label({
         text: app.name,
         style_class: 'menu-application-button-label'
-      });
-    }
-
-    this._dot = new St.Widget({
-      style: 'width: 10px; height: 3px; background-color: #FFFFFF; margin-bottom: 2px;',
-      layout_manager: new Clutter.BinLayout(),
-      x_expand: true,
-      y_expand: true,
-      x_align: Clutter.ActorAlign.CENTER,
-      y_align: Clutter.ActorAlign.END
-    });
-
-    this._iconContainer = new St.BoxLayout({
-      vertical: true
-    });
-    this._iconContainer.add_style_class_name('menu-application-list-button');
-
-    this._iconContainer.add(this.icon, {
-      x_fill: false,
-      y_fill: false,
-      x_align: St.Align.END,
-      y_align: St.Align.END
-    });
-    this._iconContainer.add(this._dot, {
-      x_fill: false,
-      y_fill: false,
-      x_align: St.Align.END,
-      y_align: St.Align.END
-    });
-
-    this.buttonbox = new St.BoxLayout();
-    this.buttonbox.add(this._iconContainer, {
-      x_fill: false,
-      y_fill: false,
-      x_align: St.Align.START,
-      y_align: St.Align.MIDDLE
-    });
-    this.buttonbox.add(this.label, {
-      x_fill: false,
-      y_fill: false,
-      x_align: St.Align.START,
-      y_align: St.Align.MIDDLE
-    });
-
-    this.actor.set_child(this.buttonbox);
-
-    // Connect signals
-    this.actor.connect('touch-event', Lang.bind(this, this._onTouchEvent));
-    if (appType == ApplicationType.APPLICATION) {
-      this._stateChangedId = this._app.connect('notify::state', Lang.bind(this, this._onStateChanged));
-    }
-
-    // Connect drag-n-drop signals
-    /*this._draggable = DND.makeDraggable(this.actor);
-    this._draggable.connect('drag-begin', Lang.bind(this,
-      function() {
-        //this._removeMenuTimeout();
-        Main.overview.beginItemDrag(this);
-        if (this._parent) {
-          if (this._parent._categoryWorkspaceMode == CategoryWorkspaceMode.CATEGORY) {
-            this._parent.toggleCategoryWorkspaceMode();
-          }
-        }
-      }));
-    this._draggable.connect('drag-cancelled', Lang.bind(this,
-      function() {
-        Main.overview.cancelledItemDrag(this);
-      }));
-    this._draggable.connect('drag-end', Lang.bind(this,
-      function() {
-        Main.overview.endItemDrag(this);
-      }));*/
-
-    // Check if running state
-    this._dot.opacity = 0;
-    this._onStateChanged();
-  },
-
-  _onTouchEvent: function(actor, event) {
-    return Clutter.EVENT_PROPAGATE;
-  },
-
-  _onStateChanged: function() {
-    if (this._type == ApplicationType.APPLICATION) {
-      if (this._app.state != Cinnamon.AppState.STOPPED) {
-        this._dot.opacity = 255;
-      } else {
-        this._dot.opacity = 0;
-      }
-    }
-  },
-
-  getDragActor: function() {
-    let appIcon;
-    if (this._type == ApplicationType.APPLICATION) {
-      appIcon = this._app.create_icon_texture(this._iconSize);
-    } else if (this._type == ApplicationType.PLACE) {
-      appIcon = new St.Icon({
-        gicon: this._app.icon,
-        icon_size: this._iconSize
-      });
-    } else if (this._type == ApplicationType.RECENT) {
-      let gicon = Gio.content_type_get_icon(this._app.mime);
-      appIcon = new St.Icon({
-        gicon: gicon,
-        icon_size: this._iconSize
-      });
-    }
-    return appIcon;
-  },
-
-  // Returns the original actor that should align with the actor
-  // we show as the item is being dragged.
-  getDragActorSource: function() {
-    return this.icon;
-  },
-
-  shellWorkspaceLaunch: function(params) {
-    params = Params.parse(params, {
-      workspace: -1,
-      timestamp: 0
-    });
-
-    if (this._type == ApplicationType.APPLICATION) {
-      this._app.open_new_window(params.workspace);
-    } else if (this._type == ApplicationType.PLACE) {
-      if (this._app.uri) {
-        this._app.app.launch_uris([this._app.uri], null);
-      } else {
-        this._app.launch();
-      }
-    } else if (this._type == ApplicationType.RECENT) {
-      Gio.app_info_launch_default_for_uri(this._app.uri, global.create_app_launch_context(0, -1));
-    }
-
-    this.actor.remove_style_pseudo_class('pressed');
-    this.actor.remove_style_class_name('selected');
-
-    if (this._parent) {
-      if (this._parent.menu.isOpen) {
-        this._parent.menu.toggle();
-      }
-    }
-  }
-};
-Signals.addSignalMethods(AppListButton.prototype);
-
-
-/* =========================================================================
-/* name:    AppGridButton
- * @desc    A button with an icon and label that holds app info for various
- * @desc    types of sources (application, places, recent)
- * ========================================================================= */
-
-function AppGridButton() {
-  this._init.apply(this, arguments);
-}
-
-AppGridButton.prototype = {
-  _init: function(_parent, app, appType, includeText) {
-    this._applet = _parent._applet
-    this._app = app;
-    this._type = appType;
-    this._stateChangedId = 0;
-    let styleButton = 'popup-menu-item menu-application-button';
-
-    let styleLabel = 'menu-application-button-label';
-    if (this._applet.appsGridColumnCount == 3) {
-      styleButton += ' col3';
-    } else if (this._applet.appsGridColumnCount == 4) {
-      styleButton += ' col4';
-    } else if (this._applet.appsGridColumnCount == 5) {
-      styleButton += ' col5';
-    } else if (this._applet.appsGridColumnCount == 6) {
-      styleButton += ' col6';
-    } else if (this._applet.appsGridColumnCount == 7) {
-      styleButton += ' col7';
-    }
-    if (this._applet.hideCategories) {
-      styleButton += ' no-categories';
-      styleLabel += ' no-categories';
-    }
-
-    this.actor = new St.Button({
-      reactive: true,
-      style_class: styleButton,
-      x_align: St.Align.MIDDLE,
-      y_align: St.Align.MIDDLE
-    });
-    this.actor._delegate = this;
-    this._iconSize = (this._applet.appsGridIconSize > 0) ? this._applet.appsGridIconSize : 64;
-
-    // appType 0 = application, appType 1 = place, appType 2 = recent
-    if (appType == ApplicationType.APPLICATION) {
-      this.icon = app.create_icon_texture(this._iconSize);
-      this.label = new St.Label({
-        text: app.get_name(),
-        style_class: styleLabel
-      });
-    } else if (appType == ApplicationType.PLACE) {
-      this.icon = new St.Icon({
-        gicon: app.icon,
-        icon_size: this._iconSize
-      });
-      if (!this.icon) {
-        this.icon = new St.Icon({
-          icon_name: 'error',
-          icon_size: this._iconSize,
-          icon_type: St.IconType.FULLCOLOR
-        });
-      }
-      this.label = new St.Label({
-        text: app.name,
-        style_class: styleLabel
-      });
-    } else if (appType == ApplicationType.RECENT) {
-      let gicon = Gio.content_type_get_icon(app.mime);
-      this.icon = new St.Icon({
-        gicon: gicon,
-        icon_size: this._iconSize
-      });
-      if (!this.icon) {
-        this.icon = new St.Icon({
-          icon_name: 'error',
-          icon_size: this._iconSize,
-          icon_type: St.IconType.FULLCOLOR
-        });
-      }
-      this.label = new St.Label({
-        text: app.name,
-        style_class: styleLabel
       });
     }
 
@@ -709,30 +499,34 @@ AppGridButton.prototype = {
     });
 
     this.buttonbox = new St.BoxLayout({
-      vertical: true
+      vertical: isGridType
     });
-    this.buttonbox.add(this.icon, {
+    let iconDotContainer = isGridType ? 'buttonbox' : '_iconContainer';
+    this[iconDotContainer].add(this.icon, {
       x_fill: false,
       y_fill: false,
-      x_align: St.Align.MIDDLE,
-      y_align: St.Align.START
+      x_align: isGridType ? St.Align.MIDDLE : St.Align.END,
+      y_align: isGridType ? St.Align.START : St.Align.END
     });
-    if (includeText) {
-      // Use pango to wrap label text
-      //this.label.clutter_text.line_wrap_mode = Pango.WrapMode.WORD;
-      //this.label.clutter_text.line_wrap = true;
-      this.buttonbox.add(this.label, {
+    if (!isGridType) {
+      this.buttonbox.add(this._iconContainer, {
         x_fill: false,
-        y_fill: true,
-        x_align: St.Align.MIDDLE,
+        y_fill: false,
+        x_align: St.Align.START,
         y_align: St.Align.MIDDLE
       });
     }
-    this.buttonbox.add(this._dot, {
+    this.buttonbox.add(this.label, {
       x_fill: false,
       y_fill: false,
-      x_align: St.Align.MIDDLE,
-      y_align: St.Align.START
+      x_align: isGridType ? St.Align.MIDDLE : St.Align.START,
+      y_align: isGridType ? St.Align.MIDDLE : St.Align.MIDDLE
+    });
+    this[iconDotContainer].add(this._dot, {
+      x_fill: false,
+      y_fill: false,
+      x_align: isGridType ? St.Align.MIDDLE : St.Align.END,
+      y_align: isGridType ? St.Align.START : St.Align.END
     });
     this.actor.set_child(this.buttonbox);
 
@@ -742,26 +536,6 @@ AppGridButton.prototype = {
       this._stateChangedId = this._app.connect('notify::state', Lang.bind(this, this._onStateChanged));
     }
 
-    // Connect drag-n-drop signals
-    /*this._draggable = DND.makeDraggable(this.actor);
-    this._draggable.connect('drag-begin', Lang.bind(this,
-      function() {
-        //this._removeMenuTimeout();
-        Main.overview.beginItemDrag(this);
-        if (this._parent) {
-          if (this._parent._categoryWorkspaceMode == CategoryWorkspaceMode.CATEGORY) {
-            this._parent.toggleCategoryWorkspaceMode();
-          }
-        }
-      }));
-    this._draggable.connect('drag-cancelled', Lang.bind(this,
-      function() {
-        Main.overview.cancelledItemDrag(this);
-      }));
-    this._draggable.connect('drag-end', Lang.bind(this,
-      function() {
-        Main.overview.endItemDrag(this);
-      }));*/
 
     // Check if running state
     this._dot.opacity = 0;
@@ -835,8 +609,7 @@ AppGridButton.prototype = {
     }
   }
 };
-Signals.addSignalMethods(AppGridButton.prototype);
-
+Signals.addSignalMethods(AppListGridButton.prototype);
 
 /* =========================================================================
 /* name:    GroupButton
