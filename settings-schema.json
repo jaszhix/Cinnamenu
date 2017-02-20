@@ -156,12 +156,6 @@
     "description": "Number of columns in apps grid",
     "tooltip": "Number of columns in apps grid"
   },
-  "hide-categories": {
-    "type": "checkbox",
-    "default": false,
-    "description": "Hide the Categories Panel of the menu",
-    "tooltip": "Hide the Categories Panel of the menu"
-  },
   "category-selection-method": {
     "type": "combobox",
     "default": 0,

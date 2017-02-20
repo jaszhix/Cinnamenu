@@ -944,42 +944,28 @@ PanelMenuButton.prototype = {
       // Determine width based on user-power group button widths
       if (this._applet.hideShortcuts) {
         this._widthShortcutsBox = 0;
-        if (this._applet.hideCategories) {
-          let categoryWidth = 0;
+        if (this.powerGroupBox.width > this.groupCategoriesWorkspacesScrollBox.width) {
+          let categoryWidth = this.powerGroupBox.width;
           this.groupCategoriesWorkspacesScrollBox.width = categoryWidth;
           this.categoriesBox.width = categoryWidth;
           this._widthCategoriesBox = categoryWidth;
         } else {
-          if (this.powerGroupBox.width > this.groupCategoriesWorkspacesScrollBox.width) {
-            let categoryWidth = this.powerGroupBox.width;
-            this.groupCategoriesWorkspacesScrollBox.width = categoryWidth;
-            this.categoriesBox.width = categoryWidth;
-            this._widthCategoriesBox = categoryWidth;
-          } else {
-            let groupWidth = this.groupCategoriesWorkspacesScrollBox.width;
-            this.categoriesBox.width = groupWidth;
-            this._widthCategoriesBox = groupWidth;
-          }
+          let groupWidth = this.groupCategoriesWorkspacesScrollBox.width;
+          this.categoriesBox.width = groupWidth;
+          this._widthCategoriesBox = groupWidth;
         }
       } else {
         this._widthShortcutsBox = this.shortcutsScrollBox.width;
-        if (this._applet.hideCategories) {
-          let categoryWidth = 0;
+        if (this.powerGroupBox.width > (this.groupCategoriesWorkspacesScrollBox.width + this.shortcutsScrollBox.width)) {
+          let categoryWidth = this.powerGroupBox.width - this.shortcutsScrollBox.width;
           this.groupCategoriesWorkspacesScrollBox.width = categoryWidth;
           this.categoriesBox.width = categoryWidth;
           this._widthCategoriesBox = categoryWidth;
         } else {
-          if (this.powerGroupBox.width > (this.groupCategoriesWorkspacesScrollBox.width + this.shortcutsScrollBox.width)) {
-            let categoryWidth = this.powerGroupBox.width - this.shortcutsScrollBox.width;
-            this.groupCategoriesWorkspacesScrollBox.width = categoryWidth;
-            this.categoriesBox.width = categoryWidth;
-            this._widthCategoriesBox = categoryWidth;
-          } else {
-            let groupWidth = this.groupCategoriesWorkspacesScrollBox.width + this.shortcutsScrollBox.width;
-            this.powerGroupBox.width = groupWidth;
-            this.categoriesBox.width = this.groupCategoriesWorkspacesScrollBox.width;
-            this._widthCategoriesBox = this.groupCategoriesWorkspacesScrollBox.width;
-          }
+          let groupWidth = this.groupCategoriesWorkspacesScrollBox.width + this.shortcutsScrollBox.width;
+          this.powerGroupBox.width = groupWidth;
+          this.categoriesBox.width = this.groupCategoriesWorkspacesScrollBox.width;
+          this._widthCategoriesBox = this.groupCategoriesWorkspacesScrollBox.width;
         }
       }
 
@@ -2094,11 +2080,7 @@ PanelMenuButton.prototype = {
             }
           } else {
             if (this._applet.hideShortcuts) {
-              if (this._applet.hideCategories) {
-                this._activeContainer = (viewMode == ApplicationsViewMode.LIST) ? this.applicationsListBox : this.applicationsGridBox;
-              } else {
-                this._activeContainer = this.categoriesBox;
-              }
+              this._activeContainer = this.categoriesBox;
             } else {
               this._activeContainer = this.shortcutsBox;
             }
@@ -2108,11 +2090,7 @@ PanelMenuButton.prototype = {
           if (reverse) {
             this._activeContainer = this.viewModeBox;
           } else {
-            if (this._applet.hideCategories) {
-              this._activeContainer = (viewMode == ApplicationsViewMode.LIST) ? this.applicationsListBox : this.applicationsGridBox;
-            } else {
-              this._activeContainer = this.categoriesBox;
-            }
+            this._activeContainer = this.categoriesBox;
           }
           break;
         case this.categoriesBox:
@@ -2128,30 +2106,14 @@ PanelMenuButton.prototype = {
           break;
         case this.applicationsListBox:
           if (reverse) {
-            if (this._applet.hideCategories) {
-              if (this._applet.hideShortcuts) {
-                this._activeContainer = this.viewModeBox;
-              } else {
-                this._activeContainer = this.shortcutsBox;
-              }
-            } else {
-              this._activeContainer = this.categoriesBox;
-            }
+            this._activeContainer = this.categoriesBox;
           } else {
             this._activeContainer = this.powerGroupBox;
           }
           break;
         case this.applicationsGridBox:
           if (reverse) {
-            if (this._applet.hideCategories) {
-              if (this._applet.hideShortcuts) {
-                this._activeContainer = this.viewModeBox;
-              } else {
-                this._activeContainer = this.shortcutsBox;
-              }
-            } else {
-              this._activeContainer = this.categoriesBox;
-            }
+            this._activeContainer = this.categoriesBox;
           } else {
             this._activeContainer = this.powerGroupBox;
           }
@@ -3314,7 +3276,7 @@ PanelMenuButton.prototype = {
       style_class: ''
     });
     this.applicationsBoxWrapper = new St.BoxLayout({
-      style_class: '',
+      style_class: 'menu-applications-inner-box',
       vertical: true
     });
     this.applicationsBoxWrapper.add(this.applicationsGridBox, {
@@ -3354,11 +3316,6 @@ PanelMenuButton.prototype = {
       y_align: St.Align.START
     });
     this.groupCategoriesWorkspacesScrollBox.add_actor(this.groupCategoriesWorkspacesWrapper);
-
-    if (this._applet.hideCategories) {
-      this.groupCategoriesWorkspacesWrapper.hide();
-
-    }
 
     // middlePane packs horizontally
     middlePane.add(this.groupCategoriesWorkspacesScrollBox, {
@@ -3741,15 +3698,6 @@ CinnamenuButton.prototype = {
       {
         key: 'apps-grid-column-count',
         value: 'appsGridColumnCount',
-        cb: Lang.bind(this, function() {
-          if (this.appsMenuButton) {
-            this.appsMenuButton.refresh();
-          }
-        })
-      },
-      {
-        key: 'hide-categories',
-        value: 'hideCategories',
         cb: Lang.bind(this, function() {
           if (this.appsMenuButton) {
             this.appsMenuButton.refresh();
