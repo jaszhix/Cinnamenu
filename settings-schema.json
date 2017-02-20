@@ -149,8 +149,8 @@
   "apps-grid-column-count": {
     "type": "spinbutton",
     "default": 5,
-    "min": 0,
-    "max": 5,
+    "min": 3,
+    "max": 7,
     "step": 1,
     "units": "columns",
     "description": "Number of columns in apps grid",
