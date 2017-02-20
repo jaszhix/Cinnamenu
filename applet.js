@@ -3318,12 +3318,12 @@ PanelMenuButton.prototype = {
       style_class: '',
       vertical: true,
       x_expand: true
-    }); // TBD
+    });
     this.applicationsGridBox = new St.Widget({
       layout_manager: new Clutter.TableLayout(),
       reactive: true,
       style_class: ''
-    }); //cinnamenu-applications-grid-box
+    });
     this.applicationsBoxWrapper = new St.BoxLayout({
       style_class: '',
       vertical: true
@@ -3438,8 +3438,8 @@ PanelMenuButton.prototype = {
       source: this.groupCategoriesWorkspacesScrollBox,
       coordinate: Clutter.BindCoordinate.HEIGHT,
       offset: 0
-    }));
-*/
+    }));*/
+
     this._widthCategoriesBox = this.categoriesBox.width;
   }
 };
