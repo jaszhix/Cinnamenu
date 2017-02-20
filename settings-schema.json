@@ -108,34 +108,6 @@
     "description": "Use menu animations",
     "tooltip": "Allow the menu to animate on open and close"
   },
-  "hide-useroptions": {
-    "type": "checkbox",
-    "default": false,
-    "description": "Hide the User Options Panel of the menu",
-    "tooltip": "Hide the User Options Panel of the menu"
-  },
-  "hide-shortcuts": {
-    "type": "checkbox",
-    "default": false,
-    "description": "Hide the Shortcuts Panel of the menu",
-    "tooltip": "Hide the Shortcuts Panel of the menu"
-  },
-  "shortcuts-display": {
-    "type": "combobox",
-    "default": 1,
-    "description": "Icons to display on Shortcuts Panel",
-    "options": {
-      "Favorites": 0,
-      "Places": 1
-    },
-    "tooltip": "Icons to display on Shortcuts Panel"
-  },
-  "shortcuts-label": {
-    "type": "checkbox",
-    "default": false,
-    "description": "Show labels on the Shortcuts Panel",
-    "tooltip": "Show labels on the Shortcuts Panel"
-  },
   "startup-view-mode": {
     "type": "combobox",
     "default": 1,
