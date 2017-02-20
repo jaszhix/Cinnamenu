@@ -501,18 +501,7 @@ AppListGridButton.prototype = {
     this._stateChangedId = 0;
     let style;
     if (isGridType) {
-      style = 'popup-menu-item';
-      if (this._applet.appsGridColumnCount === 3) {
-        style += ' col3';
-      } else if (this._applet.appsGridColumnCount === 4) {
-        style += ' col4';
-      } else if (this._applet.appsGridColumnCount === 5) {
-        style += ' col5';
-      } else if (this._applet.appsGridColumnCount === 6) {
-        style += ' col6';
-      } else if (this._applet.appsGridColumnCount === 7) {
-        style += ' col7';
-      }
+      style = 'popup-menu-item cinnamenu-application-grid-button col'+this._applet.appsGridColumnCount.toString();
 
       this._iconSize = (this._applet.appsGridIconSize > 0) ? this._applet.appsGridIconSize : 64;
     } else {
@@ -942,13 +931,6 @@ PanelMenuButton.prototype = {
       this._applicationsViewMode = this._applet.startupViewMode;
       this._appGridColumns = this._applet.appsGridColumnCount;
 
-      // Set height (we also set constraints on scrollboxes
-      // Why does height need to be set when already set constraints? because of issue noted below
-      // ISSUE: If height isn't set, then popup menu height will expand when application buttons are added
-      let height = this.groupCategoriesWorkspacesScrollBox.height;
-      this.applicationsScrollBox.height = height;
-      this.shortcutsScrollBox.height = height;
-
       // Set height of viewModeBox to searchBox
       this.viewModeBox.height = this.searchBox.height;
       this._setButtonHeight(this.toggleListGridView.actor, this.searchBox.height);
@@ -1016,6 +998,13 @@ PanelMenuButton.prototype = {
 
       // Display startup apps
       this._resetDisplayApplicationsToStartup();
+
+      // Set height (we also set constraints on scrollboxes
+      // Why does height need to be set when already set constraints? because of issue noted below
+      // ISSUE: If height isn't set, then popup menu height will expand when application buttons are added
+      let height = this.groupCategoriesWorkspacesScrollBox.height;
+      this.applicationsScrollBox.height = height;
+      this.shortcutsScrollBox.height = height;
     } else {
       this.resetSearch();
       this._clearCategorySelections(this.categoriesBox);
@@ -1563,12 +1552,12 @@ PanelMenuButton.prototype = {
       }
     }
 
-    let style1 = ', style2 = ',
-      style3 = ', style4 = ',
-      style5 = ', style6 = ';
-    let delimeter1 = ', delimeter2 = ',
-      delimeter3 = ', delimeter4 = ',
-      delimeter5 = ', delimeter6 = ';
+    let style1 = '', style2 = '',
+      style3 = '', style4 = '',
+      style5 = '', style6 = '';
+    let delimeter1 = '', delimeter2 = '',
+      delimeter3 = '', delimeter4 = '',
+      delimeter5 = '', delimeter6 = '';
     if (themeBorderColor) {
       if (style1 != '') {
         delimeter1 = '; ';
