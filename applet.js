@@ -1597,8 +1597,22 @@ PanelMenuButton.prototype = {
       res = [];
       for (let i = 0, len = applist.length; i < len; i++) {
         let app = applist[i];
+        let appName = app.get_name();
+        let appKeywords = app.get_keywords();
+        let appDescription = app.get_description();
+        let appId = app.get_id();
+
         //let info = Gio.DesktopAppInfo.new(app.get_id());
-        if (kmp(Util.latinise(app.get_name().toLowerCase()), pattern) !== -1) {
+        if (kmp(Util.latinise(appName), pattern) !== -1) {
+          res.push(app);
+        }
+        if (appKeywords && res.indexOf(app) === -1 && kmp(Util.latinise(appKeywords.toLowerCase()), pattern) !== -1) {
+          res.push(app);
+        }
+        if (appDescription && res.indexOf(app) === -1 && kmp(Util.latinise(appDescription.toLowerCase()), pattern) !== -1) {
+          res.push(app);
+        }
+        if (appId && res.indexOf(app) === -1 && kmp(Util.latinise(app.get_id().slice(0, -8).toLowerCase()), pattern) !== -1) {
           res.push(app);
         }
       }
@@ -1611,9 +1625,6 @@ PanelMenuButton.prototype = {
       if (res === undefined) {
         res = [];
       }
-      res.sort(function(a, b) {
-        return a.get_name().toLowerCase() > b.get_name().toLowerCase();
-      });
     }
 
     return res;
@@ -2604,8 +2615,9 @@ PanelMenuButton.prototype = {
   },
 
   _onSearchTextChanged: function(se, prop) {
+    let searchText = this.searchEntry.get_text();
     if (this.searchActive) {
-      if (this.searchEntry.get_text() === '') {
+      if (searchText.length === 0) {
         this._resetDisplayApplicationsToStartup();
       } else {
         this._clearCategorySelections(this.categoriesBox);
@@ -2614,11 +2626,9 @@ PanelMenuButton.prototype = {
     this._clearActiveContainerSelections();
     this.selectedAppTitle.set_text('');
     this.selectedAppDescription.set_text('');
+    this.searchActive = searchText.length > 0;
 
-
-    this.searchActive = this.searchEntry.get_text().length > 0;
     if (this.searchActive) {
-
       this.searchEntry.set_secondary_icon(this._searchActiveIcon);
 
       if (this._searchIconClickedId === 0) {
@@ -2652,6 +2662,7 @@ PanelMenuButton.prototype = {
   _doSearch: function() {
     this._searchTimeoutId = 0;
     let pattern = this.searchEntryText.get_text().replace(/^\s+/g, '').replace(/\s+$/g, '').toLowerCase();
+    pattern = Util.latinise(pattern);
     if (pattern === this._previousSearchPattern) {
       return false;
     }
