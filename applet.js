@@ -405,7 +405,8 @@ AppListGridButton.prototype = {
     });
 
     this.buttonbox = new St.BoxLayout({
-      vertical: isGridType
+      vertical: isGridType,
+      width: 250
     });
     let iconDotContainer = isGridType ? 'buttonbox' : '_iconContainer';
     this[iconDotContainer].add(this.icon, {
@@ -1691,11 +1692,11 @@ PanelMenuButton.prototype = {
 
     let scrollWidth;
     if (isListView) {
-      scrollWidth = (gridWidth / 1.5) + scrollBoxBorder.left + scrollBoxBorder.right + scrollBoxPadding.left +
+      scrollWidth = (gridWidth / 1.8) + scrollBoxBorder.left + scrollBoxBorder.right + scrollBoxPadding.left +
       scrollBoxPadding.right;
     } else {
       scrollWidth = gridWidth + scrollBoxBorder.left + scrollBoxBorder.right + scrollBoxPadding.left +
-      scrollBoxPadding.right;
+      scrollBoxPadding.right + 40;
     }
 
     if (scrollWidth >= minWidth) {
@@ -1713,6 +1714,7 @@ PanelMenuButton.prototype = {
   },
 
   _displayApplications: function(appList, refresh) {
+    let isListView = this._applicationsViewMode === ApplicationsViewMode.LIST;
     let viewMode = this._applicationsViewMode;
 
     // variables for icon grid layout
@@ -1734,8 +1736,9 @@ PanelMenuButton.prototype = {
           // Until we figure out how to prevent the menu width from expanding when long titles are displayed,
           // we will truncate the text.
           let nameLength = appListButton._app.name.length;
+          let truncLimit = isListView ? 30 : 45;
           let trailingTrunc = nameLength > 70 ? '...' : '';
-          let name = appListButton._app.name.substring(0, 45) + trailingTrunc;
+          let name = appListButton._app.name.substring(0, truncLimit) + trailingTrunc;
           this.selectedAppTitle.set_text(name);
           if (appListButton._app.description) {
             this.selectedAppDescription.set_text(appListButton._app.description);
@@ -2353,15 +2356,15 @@ PanelMenuButton.prototype = {
     });
 
     this.toggleListGridView = new GroupButton(this, viewModeButtonIcon, viewModeButtonIconSize, null, {
-      style_class: 'menu-category-button'
+      style_class: 'menu-favorites-button'
     });
     this.toggleListGridView.setButtonEnterCallback(Lang.bind(this, function() {
-      this.toggleListGridView.actor.add_style_class_name('menu-category-button-selected');
+      this.toggleListGridView.actor.add_style_pseudo_class('hover');
       this.selectedAppTitle.set_text(_('List View'));
       this.selectedAppDescription.set_text('');
     }));
     this.toggleListGridView.setButtonLeaveCallback(Lang.bind(this, function() {
-      this.toggleListGridView.actor.remove_style_class_name('menu-category-button-selected');
+      this.toggleListGridView.actor.remove_style_pseudo_class('hover');
       this.selectedAppTitle.set_text('');
       this.selectedAppDescription.set_text('');
     }));
@@ -2499,7 +2502,7 @@ PanelMenuButton.prototype = {
     let allAppCategory = new CategoryListButton('all', _('All Applications'), 'computer');
     this.allAppCategory = allAppCategory;
     allAppCategory.setButtonEnterCallback(Lang.bind(this, function() {
-      allAppCategory.actor.add_style_pseudo_class('hover');
+      allAppCategory.actor.add_style_class_name('menu-category-button-selected');
       this.selectedAppTitle.set_text(allAppCategory.label.get_text());
       this.selectedAppDescription.set_text('');
 
@@ -2510,7 +2513,7 @@ PanelMenuButton.prototype = {
       this._selectCategory(allAppCategory);
     }));
     allAppCategory.setButtonLeaveCallback(Lang.bind(this, function() {
-      allAppCategory.actor.remove_style_pseudo_class('hover');
+      allAppCategory.actor.remove_style_class_name('menu-category-button-selected');
       this.selectedAppTitle.set_text('');
       this.selectedAppDescription.set_text('');
     }));
@@ -2525,7 +2528,7 @@ PanelMenuButton.prototype = {
     let favAppCategory = new CategoryListButton('favorites', _('Favorite Apps'), 'address-book-new');
     this.favAppCategory = favAppCategory;
     favAppCategory.setButtonEnterCallback(Lang.bind(this, function() {
-      favAppCategory.actor.add_style_pseudo_class('hover');
+      favAppCategory.actor.add_style_class_name('menu-category-button-selected');
       this.selectedAppTitle.set_text(favAppCategory.label.get_text());
       this.selectedAppDescription.set_text('');
 
@@ -2536,7 +2539,7 @@ PanelMenuButton.prototype = {
       this._selectCategory(favAppCategory);
     }));
     favAppCategory.setButtonLeaveCallback(Lang.bind(this, function() {
-      favAppCategory.actor.remove_style_pseudo_class('hover');
+      favAppCategory.actor.remove_style_class_name('menu-category-button-selected');
       this.selectedAppTitle.set_text('');
       this.selectedAppDescription.set_text('');
     }));
@@ -2581,7 +2584,7 @@ PanelMenuButton.prototype = {
 
     let appCategoryButtonEnterEvent = (appCategory)=>{
       appCategory.setButtonEnterCallback(Lang.bind(this, function() {
-          appCategory.actor.add_style_pseudo_class('hover');
+          appCategory.actor.add_style_class_name('menu-category-button-selected');
           this.selectedAppTitle.set_text(appCategory.label.get_text());
           this.selectedAppDescription.set_text('');
 
@@ -2595,7 +2598,7 @@ PanelMenuButton.prototype = {
 
     let appCategoryButtonLeaveEvent = (appCategory)=>{
       appCategory.setButtonLeaveCallback(Lang.bind(this, function() {
-        appCategory.actor.remove_style_pseudo_class('hover');
+        appCategory.actor.remove_style_class_name('menu-category-button-selected');
         this.selectedAppTitle.set_text('');
         this.selectedAppDescription.set_text('');
       }));
@@ -2646,7 +2649,7 @@ PanelMenuButton.prototype = {
     // Load 'places' category
     this.placesCategory = new CategoryListButton('places', _('Places'), 'folder');
     this.placesCategory.setButtonEnterCallback(Lang.bind(this, function() {
-      this.placesCategory.actor.add_style_pseudo_class('hover');
+      this.placesCategory.actor.add_style_class_name('menu-category-button-selected');
       this.selectedAppTitle.set_text(this.placesCategory.label.get_text());
       this.selectedAppDescription.set_text('');
 
@@ -2657,7 +2660,7 @@ PanelMenuButton.prototype = {
       this._selectAllPlaces(this.placesCategory);
     }));
     this.placesCategory.setButtonLeaveCallback(Lang.bind(this, function() {
-      this.placesCategory.actor.remove_style_pseudo_class('hover');
+      this.placesCategory.actor.remove_style_class_name('menu-category-button-selected');
       this.selectedAppTitle.set_text('');
       this.selectedAppDescription.set_text('');
     }));
@@ -2672,7 +2675,7 @@ PanelMenuButton.prototype = {
     if (recentEnabled) {
       this.recentCategory = new CategoryListButton('recent', _('Recent'), 'folder-recent');
       this.recentCategory.setButtonEnterCallback(Lang.bind(this, function() {
-        this.recentCategory.actor.add_style_pseudo_class('hover');
+        this.recentCategory.actor.add_style_class_name('menu-category-button-selected');
         this.selectedAppTitle.set_text(this.recentCategory.label.get_text());
         this.selectedAppDescription.set_text('');
 
@@ -2683,15 +2686,11 @@ PanelMenuButton.prototype = {
           this._selectRecent(this.recentCategory);
       }));
       this.recentCategory.setButtonLeaveCallback(Lang.bind(this, function() {
-        this.recentCategory.actor.remove_style_pseudo_class('hover');
+        this.recentCategory.actor.remove_style_class_name('menu-category-button-selected');
         this.selectedAppTitle.set_text('');
         this.selectedAppDescription.set_text('');
       }));
-      this.recentCategory.setButtonPressCallback(Lang.bind(this, function() {
-        this.recentCategory.actor.add_style_class_name('menu-category-button-selected');
-      }));
       this.recentCategory.setButtonReleaseCallback(Lang.bind(this, function() {
-        this.recentCategory.actor.remove_style_class_name('menu-category-button-selected');
         this._selectRecent(this.recentCategory);
         this.selectedAppTitle.set_text(this.recentCategory.label.get_text());
         this.selectedAppDescription.set_text('');
@@ -2702,7 +2701,7 @@ PanelMenuButton.prototype = {
     // Load 'bookmarks' category
     this.webBookmarksCategory = new CategoryListButton('bookmarks', _('Bookmarks'), 'emblem-favorite');
     this.webBookmarksCategory.setButtonEnterCallback(Lang.bind(this, function() {
-      this.webBookmarksCategory.actor.add_style_pseudo_class('hover');
+      this.webBookmarksCategory.actor.add_style_class_name('menu-category-button-selected');
       this.selectedAppTitle.set_text(this.webBookmarksCategory.label.get_text());
       this.selectedAppDescription.set_text('');
 
@@ -2713,15 +2712,11 @@ PanelMenuButton.prototype = {
       this._selectWebBookmarks(this.webBookmarksCategory);
     }));
     this.webBookmarksCategory.setButtonLeaveCallback(Lang.bind(this, function() {
-      this.webBookmarksCategory.actor.remove_style_pseudo_class('hover');
+      this.webBookmarksCategory.actor.remove_style_class_name('menu-category-button-selected');
       this.selectedAppTitle.set_text('');
       this.selectedAppDescription.set_text('');
     }));
-    this.webBookmarksCategory.setButtonPressCallback(Lang.bind(this, function() {
-      this.webBookmarksCategory.actor.add_style_class_name('menu-category-button-selected');
-    }));
     this.webBookmarksCategory.setButtonReleaseCallback(Lang.bind(this, function() {
-      this.webBookmarksCategory.actor.remove_style_class_name('menu-category-button-selected');
       this._selectWebBookmarks(this.webBookmarksCategory);
       this.selectedAppTitle.set_text(this.webBookmarksCategory.label.get_text());
       this.selectedAppDescription.set_text('');
