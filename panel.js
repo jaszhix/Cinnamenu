@@ -1,5 +1,6 @@
 const Gio = imports.gi.Gio;
 const Gtk = imports.gi.Gtk;
+const GLib = imports.gi.GLib;
 const CMenu = imports.gi.CMenu;
 const Clutter = imports.gi.Clutter;
 const St = imports.gi.St;
@@ -28,7 +29,7 @@ const GroupButton = AppletDir.buttons.GroupButton;
 const Gettext = imports.gettext.domain('Cinnamenu@json');
 const _ = Gettext.gettext;
 
-const REMEMBER_RECENT_KEY = AppletDir.panel.REMEMBER_RECENT_KEY;
+const REMEMBER_RECENT_KEY = 'remember-recent-files';
 
 const ApplicationType = {
   _applications: 0,
@@ -95,6 +96,7 @@ CinnamenuPanel.prototype = {
 
     this.menu.connect('open-state-changed', Lang.bind(this, this._onOpenStateToggled));
 
+    this.appButtons = [];
     this.applicationsByCategory = {};
     this.favorites = [];
     this._applications = [];
@@ -109,6 +111,7 @@ CinnamenuPanel.prototype = {
     this._selectedItemIndex = null;
     this._previousSelectedItemIndex = null;
     this._activeContainer = null;
+    this._isBumblebeeInstalled = GLib.file_test('/usr/bin/optirun', GLib.FileTest.EXISTS);
 
     this._searchWebBookmarks = new SearchWebBookmarks();
     this._searchWebErrorsShown = false;
@@ -1013,7 +1016,7 @@ CinnamenuPanel.prototype = {
       let apps = this._listApplications(allAppcategory);
       if (apps && apps.length > 0) {
         let app = apps[0];
-        let appGridButton = new AppListGridButton(this, app, appType, true);
+        let appGridButton = new AppListGridButton(this, this.shortcutsBox, app, appType, true);
         let gridLayout = this.applicationsGridBox.layout_manager;
         gridLayout.pack(appGridButton.actor, 0, 0);
         if (appGridButton.actor.get_stage()) {
@@ -1107,6 +1110,18 @@ CinnamenuPanel.prototype = {
     this._selectCategory(this.favAppCategory);
   },
 
+  _closeAllContextMenus: function(appListButton, isListView) {
+    for (let i = 0, len = this.appButtons.length; i < len; i++) {
+      if (appListButton.id !== this.appButtons[i].id) {
+        this.appButtons[i].closeMenu();
+      }
+    }
+
+    if (appListButton) {
+      appListButton.toggleMenu();
+    }
+  },
+
   _displayApplications: function(appList, refresh) {
     let isListView = this._applicationsViewMode === ApplicationsViewMode.LIST;
     let viewMode = this._applicationsViewMode;
@@ -1116,29 +1131,35 @@ CinnamenuPanel.prototype = {
     let column = 0;
     let rownum = 0;
 
-    let appButtonEnterEvent = (appListButton, appType)=>{
-      appListButton.actor.connect('enter-event', Lang.bind(this, function() {
-        appListButton.actor.add_style_class_name('menu-application-button-selected');
+    for (let i = 0, len = this.appButtons.length; i < len; i++) {
+      this.appButtons[i].closeMenu();
+    }
+
+    this.appButtons = [];
+
+    let appButtonEnterEvent = (appButton, appType)=>{
+      appButton.actor.connect('enter-event', Lang.bind(this, function() {
+        appButton.actor.add_style_class_name('menu-application-button-selected');
         if (appType === ApplicationType._applications) {
-          this.selectedAppTitle.set_text(appListButton._app.get_name());
-          if (appListButton._app.get_description()) {
-            this.selectedAppDescription.set_text(appListButton._app.get_description());
+          this.selectedAppTitle.set_text(appButton.app.get_name());
+          if (appButton.app.get_description()) {
+            this.selectedAppDescription.set_text(appButton.app.get_description());
           } else {
             this.selectedAppDescription.set_text('');
           }
         } else {
           // Until we figure out how to prevent the menu width from expanding when long titles are displayed,
           // we will truncate the text.
-          let nameLength = appListButton._app.name.length;
+          let nameLength = appButton.app.name.length;
           let truncLimit = isListView ? 30 : 45;
           let trailingTrunc = nameLength > 70 ? '...' : '';
-          let name = appListButton._app.name.substring(0, truncLimit) + trailingTrunc;
+          let name = appButton.app.name.substring(0, truncLimit) + trailingTrunc;
           this.selectedAppTitle.set_text(name);
-          if (appListButton._app.description) {
-            this.selectedAppDescription.set_text(appListButton._app.description);
+          if (appButton.app.description) {
+            this.selectedAppDescription.set_text(appButton.app.description);
           } else {
-            if (appListButton._app.hasOwnProperty('uri')) {
-              this.selectedAppDescription.set_text(appListButton._app.uri);
+            if (appButton.app.hasOwnProperty('uri')) {
+              this.selectedAppDescription.set_text(appButton.app.uri);
             } else {
               this.selectedAppDescription.set_text('');
             }
@@ -1147,46 +1168,44 @@ CinnamenuPanel.prototype = {
       }));
     };
 
-    let appButtonLeaveEvent = (appListButton)=>{
-      appListButton.actor.connect('leave-event', Lang.bind(this, function() {
-        appListButton.actor.remove_style_class_name('menu-application-button-selected');
+    let appButtonLeaveEvent = (appButton)=>{
+      appButton.actor.connect('leave-event', Lang.bind(this, function() {
+        appButton.actor.remove_style_class_name('menu-application-button-selected');
         this.selectedAppTitle.set_text('');
         this.selectedAppDescription.set_text('');
       }));
     };
 
-    let appButtonButtonPressEvent = (appListButton)=>{
-      appListButton.actor.connect('button-press-event', Lang.bind(this, function() {
-        appListButton.actor.add_style_pseudo_class('pressed');
+    let appButtonButtonPressEvent = (appButton)=>{
+      appButton.actor.connect('button-press-event', Lang.bind(this, function() {
+        appButton.actor.add_style_pseudo_class('pressed');
       }));
     };
 
-    let appButtonButtonReleaseEvent = (appListButton, appType, app)=>{
-      appListButton.actor.connect('button-release-event', Lang.bind(this, function(actor, e) {
-        appListButton.actor.remove_style_pseudo_class('pressed');
+    let appButtonButtonReleaseEvent = (appButton, appType, app)=>{
+      appButton.actor.connect('button-release-event', Lang.bind(this, function(actor, e) {
+        appButton.actor.remove_style_pseudo_class('pressed');
         let button = e.get_button();
         if (button === 1) {
           this.selectedAppTitle.set_text('');
           this.selectedAppDescription.set_text('');
           if (appType === ApplicationType._applications) {
-            appListButton._app.open_new_window(-1);
+            appButton.app.open_new_window(-1);
           } else if (appType === ApplicationType._places) {
             if (app.uri) {
-              appListButton._app.app.launch_uris([app.uri], null);
+              appButton.app.app.launch_uris([app.uri], null);
             } else {
-              appListButton._app.launch();
+              appButton.app.launch();
             }
           } else if (appType === ApplicationType._recent) {
             Gio.app_info_launch_default_for_uri(app.uri, global.create_app_launch_context(0, -1));
           }
           this.menu.close();
-        } else if (button === 2) {
-          // We might want to repurpose the shortcutsBox container for the context menu.
-          //this.shortcutsBox.add_actor(shortcutButton.actor);
+        } else if (button === 3) {
+          this._closeAllContextMenus(appButton);
         }
       }));
     };
-
     if (!appList) {
       return
     }
@@ -1207,22 +1226,19 @@ CinnamenuPanel.prototype = {
           let app = apps[i];
           // only add if not already in this._applications or refreshing
           if (refresh || !this._applications[app]) {
-            if (viewMode == ApplicationsViewMode.LIST) { // ListView
-              let appListButton = new AppListGridButton(this, app, appType, false);
-              appButtonEnterEvent(appListButton, appType);
-              appButtonLeaveEvent(appListButton)
-              appButtonButtonPressEvent(appListButton);
-              appButtonButtonReleaseEvent(appListButton, appType, app);
-              this.applicationsListBox.add_actor(appListButton.actor);
+            let isListView = viewMode === ApplicationsViewMode.LIST;
+            let appButton = new AppListGridButton(this, this.shortcutsBox, app, appType, !isListView);
+            this.appButtons.push(appButton);
+            appButtonEnterEvent(appButton, appType);
+            appButtonLeaveEvent(appButton)
+            appButtonButtonPressEvent(appButton);
+            appButtonButtonReleaseEvent(appButton, appType, app);
+            if (isListView) { // ListView
+              
+              this.applicationsListBox.add_actor(appButton.actor);
             } else { // GridView
-              let appGridButton = new AppListGridButton(this, app, appType, true);
-              appGridButton.buttonbox.width = this._appGridButtonWidth;
-              appButtonEnterEvent(appGridButton, appType);
-              appButtonLeaveEvent(appGridButton)
-              appButtonButtonPressEvent(appGridButton);
-              appButtonButtonReleaseEvent(appGridButton, appType, app);
               let gridLayout = this.applicationsGridBox.layout_manager;
-              gridLayout.pack(appGridButton.actor, column, rownum);
+              gridLayout.pack(appButton.actor, column, rownum);
               column++;
               if (column > this._appGridColumns - 1) {
                 column = 0;
@@ -1677,7 +1693,7 @@ CinnamenuPanel.prototype = {
     });
 
     // Middle pane holds shortcuts, categories/places/power, applications, workspaces (packed horizontally)
-    let middlePane = new St.BoxLayout({
+    this.middlePane = new St.BoxLayout({
       style_class: ''
     });
 
@@ -1696,7 +1712,7 @@ CinnamenuPanel.prototype = {
     this.groupCategoriesWorkspacesScrollBox = new St.ScrollView({
       x_fill: true,
       y_fill: false,
-      height: 600,
+      //height: 600,
       y_align: St.Align.START,
       style_class: 'vfade cinnamenu-categories-workspaces-scrollbox'
     });
@@ -1749,9 +1765,7 @@ CinnamenuPanel.prototype = {
       style_class: 'cinnamenu-view-mode-box' + viewModeAdditionalStyle
     });
 
-    this.toggleListGridView = new GroupButton(this, viewModeButtonIcon, viewModeButtonIconSize, null, {
-      style_class: 'menu-favorites-button'
-    });
+    this.toggleListGridView = new GroupButton(this, viewModeButtonIcon, viewModeButtonIconSize, null, null);
     this.toggleListGridView.setButtonEnterCallback(Lang.bind(this, function() {
       this.toggleListGridView.actor.add_style_pseudo_class('hover');
       this.selectedAppTitle.set_text(_('List View'));
@@ -2122,9 +2136,7 @@ CinnamenuPanel.prototype = {
       style_class: ''
     });
 
-    let lockScreen = new GroupButton(this, 'system-lock-screen', 16, null, {
-      style_class: 'menu-favorites-button'
-    });
+    let lockScreen = new GroupButton(this, 'system-lock-screen', 16, null, null);
     lockScreen.setButtonEnterCallback(Lang.bind(this, function() {
       lockScreen.actor.add_style_class_name('selected');
       this.selectedAppTitle.set_text(_('Lock Screen'));
@@ -2155,9 +2167,7 @@ CinnamenuPanel.prototype = {
         this._screenSaverProxy.LockRemote('');
       }
     }));
-    let logoutUser = new GroupButton(this, 'application-exit', 16, null, {
-      style_class: 'menu-favorites-button'
-    });
+    let logoutUser = new GroupButton(this, 'application-exit', 16, null, null);
     logoutUser.setButtonEnterCallback(Lang.bind(this, function() {
       logoutUser.actor.add_style_class_name('selected');
       this.selectedAppTitle.set_text(_('Logout User'));
@@ -2180,9 +2190,7 @@ CinnamenuPanel.prototype = {
       this.menu.close();
       this._session.LogoutRemote(0);
     }));
-    let systemShutdown = new GroupButton(this, 'system-shutdown', 16, null, {
-      style_class: 'menu-favorites-button'
-    });
+    let systemShutdown = new GroupButton(this, 'system-shutdown', 16, null, null);
     systemShutdown.setButtonEnterCallback(Lang.bind(this, function() {
       systemShutdown.actor.add_style_class_name('selected');
       this.selectedAppTitle.set_text(_('Shutdown'));
@@ -2294,19 +2302,19 @@ CinnamenuPanel.prototype = {
     this.groupCategoriesWorkspacesScrollBox.add_actor(this.groupCategoriesWorkspacesWrapper);
 
     // middlePane packs horizontally
-    middlePane.add(this.groupCategoriesWorkspacesScrollBox, {
+    this.middlePane.add(this.groupCategoriesWorkspacesScrollBox, {
       x_fill: false,
       y_fill: false,
       x_align: St.Align.START,
       y_align: St.Align.START
     });
-    middlePane.add(this.applicationsScrollBox, {
+    this.middlePane.add(this.applicationsScrollBox, {
       x_fill: false,
       y_fill: false,
       x_align: St.Align.START,
       y_align: St.Align.START
     });
-    middlePane.add(this.shortcutsScrollBox, {
+    this.middlePane.add(this.shortcutsScrollBox, {
       x_fill: false,
       y_fill: false,
       x_align: St.Align.START,
@@ -2338,7 +2346,7 @@ CinnamenuPanel.prototype = {
 
     // mainbox packs vertically
     this.mainBox.add_actor(this.topPane);
-    this.mainBox.add_actor(middlePane);
+    this.mainBox.add_actor(this.middlePane);
     this.mainBox.add_actor(this.bottomPane);
 
     // add all to section

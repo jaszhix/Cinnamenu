@@ -55,7 +55,6 @@ CinnamenuButton.prototype = {
 
   _init: function(metadata, orientation, panel_height, instance_id) {
     Applet.TextIconApplet.prototype._init.call(this, orientation, panel_height, instance_id);
-    this.state = {};
     this.setAllowedLayout(Applet.AllowedLayout.BOTH);
     this.orientation = orientation;
     this._uuid = metadata.uuid;

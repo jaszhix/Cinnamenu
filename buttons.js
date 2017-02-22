@@ -7,6 +7,9 @@ const Lang = imports.lang;
 const Signals = imports.signals;
 const Params = imports.misc.params;
 const PopupMenu = imports.ui.popupMenu;
+const AppFavorites = imports.ui.appFavorites;
+const FileUtils = imports.misc.fileUtils;
+const Util = imports.misc.util;
 //const DND = imports.ui.dnd;
 const AppletDir = imports.ui.appletManager.applets['Cinnamenu@json'];
 
@@ -15,6 +18,8 @@ const Firefox = AppletDir.webFirefox;
 const GoogleChrome = AppletDir.webGoogleChrome;
 const Midori = AppletDir.webMidori;
 const Opera = AppletDir.webOpera;
+
+const USER_DESKTOP_PATH = FileUtils.getUserDesktopDir();
 
 const ApplicationType = {
   _applications: 0,
@@ -184,14 +189,14 @@ CategoryListButton.prototype = {
   }
 };
 
-/*function ApplicationContextMenuItem(appButton, label, action, iconName) {
+function ApplicationContextMenuItem(appButton, label, action, iconName) {
   this._init(appButton, label, action, iconName);
 }
 
 ApplicationContextMenuItem.prototype = {
   __proto__: PopupMenu.PopupBaseMenuItem.prototype,
 
-  _init: function (appButton, label, action, iconName) {
+  _init: function(appButton, label, action, iconName) {
     PopupMenu.PopupBaseMenuItem.prototype._init.call(this, {
       focusOnHover: false
     });
@@ -201,6 +206,7 @@ ApplicationContextMenuItem.prototype = {
     this.label = new St.Label({
       text: label
     });
+
     if (iconName !== null) {
       this.icon = new St.Icon({
         icon_name: iconName,
@@ -216,57 +222,54 @@ ApplicationContextMenuItem.prototype = {
     this.addActor(this.label);
   },
 
-  activate: function (event) {
+  activate: function(event) {
     switch (this._action) {
-    case 'add_to_panel':
-      if (!Main.AppletManager.get_role_provider_exists(Main.AppletManager.Roles.PANEL_LAUNCHER)) {
-        let new_applet_id = global.settings.get_int('next-applet-id');
-        global.settings.set_int('next-applet-id', (new_applet_id + 1));
-        let enabled_applets = global.settings.get_strv('enabled-applets');
-        enabled_applets.push('panel1:right:0:panel-launchers@cinnamon.org:' + new_applet_id);
-        global.settings.set_strv('enabled-applets', enabled_applets);
-      }
+      case 'add_to_panel':
+        if (!Main.AppletManager.get_role_provider_exists(Main.AppletManager.Roles.PANEL_LAUNCHER)) {
+          let new_applet_id = global.settings.get_int('next-applet-id');
+          global.settings.set_int('next-applet-id', (new_applet_id + 1));
+          let enabled_applets = global.settings.get_strv('enabled-applets');
+          enabled_applets.push('panel1:right:0:panel-launchers@cinnamon.org:' + new_applet_id);
+          global.settings.set_strv('enabled-applets', enabled_applets);
+        }
 
-      let launcherApplet = Main.AppletManager.get_role_provider(Main.AppletManager.Roles.PANEL_LAUNCHER);
-      launcherApplet.acceptNewLauncher(this._appButton.app.get_id());
+        let launcherApplet = Main.AppletManager.get_role_provider(Main.AppletManager.Roles.PANEL_LAUNCHER);
+        launcherApplet.acceptNewLauncher(this._appButton.app.get_id());
 
-      this._appButton.toggleMenu();
-      break;
-    case 'add_to_desktop':
-      let file = Gio.file_new_for_path(this._appButton.app.get_app_info().get_filename());
-      let destFile = Gio.file_new_for_path(`${USER_DESKTOP_PATH}/${this._appButton.app.get_id()}`);
-      try {
-        file.copy(destFile, 0, null, function () {});
+        this._appButton.toggleMenu();
+        break;
+      case 'add_to_desktop':
+        let file = Gio.file_new_for_path(this._appButton.app.get_app_info().get_filename());
+        let destFile = Gio.file_new_for_path(USER_DESKTOP_PATH + '/' + this._appButton.app.get_id());
         try {
+          file.copy(destFile, 0, null, function() {});
           FileUtils.changeModeGFile(destFile, 755);
         } catch (e) {
-          Util.spawnCommandLine(`chmod +x '${USER_DESKTOP_PATH}/${this._appButton.app.get_id()}'`);
+          global.log(e);
         }
-      } catch (e) {
-        global.log(e);
-      }
-      this._appButton.toggleMenu();
-      break;
-    case 'add_to_favorites':
-      AppFavorites.getAppFavorites().addFavorite(this._appButton.app.get_id());
-      this._appButton.toggleMenu();
-      break;
-    case 'remove_from_favorites':
-      AppFavorites.getAppFavorites().removeFavorite(this._appButton.app.get_id());
-      this._appButton.toggleMenu();
-      break;
-    case 'uninstall':
-      Util.spawnCommandLine(`gksu -m '${_('Please provide your password to uninstall this application')}' /usr/bin/cinnamon-remove-application '${this._appButton.app.get_app_info().get_filename()}'`);
-      this._appButton.appsMenuButton.menu.close();
-      break;
-    case 'run_with_nvidia_gpu':
-      Util.spawnCommandLine(`optirun gtk-launch ${this._appButton.app.get_id()}`);
-      this._appButton.appsMenuButton.menu.close();
-      break;
+        this._appButton.toggleMenu();
+        break;
+      case 'add_to_favorites':
+        AppFavorites.getAppFavorites().addFavorite(this._appButton.app.get_id());
+        this._appButton.toggleMenu();
+        break;
+      case 'remove_from_favorites':
+        AppFavorites.getAppFavorites().removeFavorite(this._appButton.app.get_id());
+        this._appButton.toggleMenu();
+        break;
+      case 'uninstall':
+        Util.spawnCommandLine('gksu -m \'' + _('Please provide your password to uninstall this application') 
+          + '\' /usr/bin/cinnamon-remove-application \'' + this._appButton.app.get_app_info().get_filename() + '\'');
+        this._appButton._parent.menu.close();
+        break;
+      case 'run_with_nvidia_gpu':
+        Util.spawnCommandLine('optirun gtk-launch ' + this._appButton.app.get_id());
+        this._appButton._parent.menu.close();
+        break;
     }
     return false;
   }
-};*/
+};
 
 /* =========================================================================
 /* name:    AppListGridButton
@@ -279,14 +282,22 @@ function AppListGridButton() {
 }
 
 AppListGridButton.prototype = {
-  _init: function(_parent, app, appType, isGridType) {
+  _init: function(_parent, menuContainer, app, appType, isGridType) {
 
     this._parent = _parent;
     this._applet = _parent._applet;
-    this._app = app;
+    this.app = app;
     this._type = appType;
     this._stateChangedId = 0;
     let style;
+
+    this.id = Math.random();
+    this.menuContainer = menuContainer;
+    this.menu = new PopupMenu.PopupSubMenu(this.actor);
+    this.menu.actor.set_style_class_name('menu-context-menu');
+    //this.menu.connect('open-state-changed', Lang.bind(this, this._subMenuOpenStateChanged));
+    this.menuContainer.add_actor(this.menu.actor);
+
     if (isGridType) {
       style = 'popup-menu-item cinnamenu-application-grid-button col'+this._applet.appsGridColumnCount.toString();
 
@@ -393,7 +404,7 @@ AppListGridButton.prototype = {
     // Connect signals
     this.actor.connect('touch-event', Lang.bind(this, this._onTouchEvent));
     if (appType == ApplicationType._applications) {
-      this._stateChangedId = this._app.connect('notify::state', Lang.bind(this, this._onStateChanged));
+      this._stateChangedId = this.app.connect('notify::state', Lang.bind(this, this._onStateChanged));
     }
 
     // Check if running state
@@ -407,7 +418,7 @@ AppListGridButton.prototype = {
 
   _onStateChanged: function() {
     if (this._type == ApplicationType._applications) {
-      if (this._app.state != Cinnamon.AppState.STOPPED) {
+      if (this.app.state != Cinnamon.AppState.STOPPED) {
         this._dot.opacity = 255;
       } else {
         this._dot.opacity = 0;
@@ -418,14 +429,14 @@ AppListGridButton.prototype = {
   getDragActor: function() {
     let appIcon;
     if (this._type == ApplicationType._applications) {
-      appIcon = this._app.create_icon_texture(this._iconSize);
+      appIcon = this.app.create_icon_texture(this._iconSize);
     } else if (this._type == ApplicationType._places) {
       appIcon = new St.Icon({
-        gicon: this._app.icon,
+        gicon: this.app.icon,
         icon_size: this._iconSize
       });
     } else if (this._type == ApplicationType._recent) {
-      let gicon = Gio.content_type_get_icon(this._app.mime);
+      let gicon = Gio.content_type_get_icon(this.app.mime);
       appIcon = new St.Icon({
         gicon: gicon,
         icon_size: this._iconSize
@@ -447,15 +458,15 @@ AppListGridButton.prototype = {
     });
 
     if (this._type == ApplicationType._applications) {
-      this._app.open_new_window(params.workspace);
+      this.app.open_new_window(params.workspace);
     } else if (this._type == ApplicationType._places) {
-      if (this._app.uri) {
-        this._app.app.launch_uris([this._app.uri], null);
+      if (this.app.uri) {
+        this.app.app.launch_uris([this.app.uri], null);
       } else {
-        this._app.launch();
+        this.app.launch();
       }
     } else if (this._type == ApplicationType._recent) {
-      Gio.app_info_launch_default_for_uri(this._app.uri, global.create_app_launch_context(0, -1));
+      Gio.app_info_launch_default_for_uri(this.app.uri, global.create_app_launch_context(0, -1));
     }
 
     this.actor.remove_style_pseudo_class('pressed');
@@ -466,7 +477,46 @@ AppListGridButton.prototype = {
         this._parent.menu.toggle();
       }
     }
-  }
+  },
+
+  closeMenu: function() {
+    this.menu.close();
+  },
+
+  toggleMenu: function() {
+    if (this._type !== ApplicationType._applications) {
+      return false;
+    }
+    if (!this.menu.isOpen) {
+      let children = this.menu.box.get_children();
+      for (var i in children) {
+        this.menu.box.remove_actor(children[i]);
+      }
+      let menuItem;
+      menuItem = new ApplicationContextMenuItem(this, _('Add to panel'), 'add_to_panel', 'list-add');
+      this.menu.addMenuItem(menuItem);
+      if (USER_DESKTOP_PATH) {
+        menuItem = new ApplicationContextMenuItem(this, _('Add to desktop'), 'add_to_desktop', 'computer');
+        this.menu.addMenuItem(menuItem);
+      }
+      if (AppFavorites.getAppFavorites().isFavorite(this.app.get_id())) {
+        menuItem = new ApplicationContextMenuItem(this, _('Remove from favorites'), 'remove_from_favorites',
+          'starred');
+        this.menu.addMenuItem(menuItem);
+      } else {
+        menuItem = new ApplicationContextMenuItem(this, _('Add to favorites'), 'add_to_favorites', 'non-starred');
+        this.menu.addMenuItem(menuItem);
+      }
+      menuItem = new ApplicationContextMenuItem(this, _('Uninstall'), 'uninstall', 'edit-delete');
+      this.menu.addMenuItem(menuItem);
+      if (this._parent._isBumblebeeInstalled) {
+        menuItem = new ApplicationContextMenuItem(this, _('Run with NVIDIA GPU'), 'run_with_nvidia_gpu', 'cpu');
+        this.menu.addMenuItem(menuItem);
+      }
+    }
+    this.menu.toggle();
+    return true
+  },
 };
 Signals.addSignalMethods(AppListGridButton.prototype);
 
@@ -493,10 +543,7 @@ GroupButton.prototype = {
     this.buttonLeaveCallback = null;
     this.buttonPressCallback = null;
     this.buttonReleaseCallback = null;
-    /*let style = 'popup-menu-item popup-submenu-menu-item' + params.style_class;
-    let paddingTop = labelText ? 2 : iconSize >= 18 ? 5 : 2;*/
-    //this.actor.add_style_class_name('menu-favorites-button');
-    //this.actor.add_style_class_name(params.style_class);
+
     let monitorHeight = Main.layoutManager.primaryMonitor.height;
     let realSize = (0.7 * monitorHeight) / 4;
     let adjustedIconSize = 0.6 * realSize / global.ui_scale;
@@ -519,12 +566,6 @@ GroupButton.prototype = {
       });
       this.addActor(this.icon);
       this.icon.realize();
-      /*this.buttonbox.add(this.icon, {
-        x_fill: false,
-        y_fill: false,
-        x_align: St.Align.MIDDLE,
-        y_align: St.Align.MIDDLE
-      });*/
     }
     if (labelText) {
       this.label = new St.Label({
@@ -532,14 +573,7 @@ GroupButton.prototype = {
         style_class: params.style_class + '-label'
       });
       this.addActor(this.label);
-      /*this.buttonbox.add(this.label, {
-        x_fill: false,
-        y_fill: false,
-        x_align: St.Align.MIDDLE,
-        y_align: St.Align.MIDDLE
-      });*/
     }
-    //this.actor.set_child(this.buttonbox);
 
     // Connect signals
     this.actor.connect('touch-event', Lang.bind(this, this._onTouchEvent));
