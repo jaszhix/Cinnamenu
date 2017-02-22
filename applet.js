@@ -648,16 +648,16 @@ GroupButton.prototype = {
 
 
 /* =========================================================================
-/* name:    PanelMenuButton
+/* name:    CinnamenuPanel
  * @desc    A top panel button the toggles a popup menu
  * @impl    Used for menu button on top panel
  * ========================================================================= */
 
-function PanelMenuButton() {
+function CinnamenuPanel() {
   this._init.apply(this, arguments)
 }
 
-PanelMenuButton.prototype = {
+CinnamenuPanel.prototype = {
   __proto__: PanelMenu.Button.prototype,
 
   _init: function(applet) {
@@ -3141,7 +3141,7 @@ CinnamenuButton.prototype = {
     this.menu = new Applet.AppletPopupMenu(this, this.orientation);
     this.menuManager.addMenu(this.menu);
     this.menu.setCustomStyleClass('menu-background');
-    this.appsMenuButton = new PanelMenuButton(this);
+    this.appsMenuButton = new CinnamenuPanel(this);
   },
 
   openMenu: function() {
