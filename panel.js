@@ -897,12 +897,12 @@ CinnamenuPanel.prototype = {
     };
     if (this.searchBox.get_stage()) {
       let themeNode = this.searchBox.get_theme_node();
-      /*searchBoxMargin = { // Not supported in Cinnamon
-          left: themeNode.get_margin(St.Side.LEFT),
-          top: themeNode.get_margin(St.Side.TOP),
-          bottom: themeNode.get_margin(St.Side.BOTTOM),
-          right: themeNode.get_margin(St.Side.RIGHT),
-      };*/
+      searchBoxMargin = { // Not supported in Cinnamon
+          left: this.searchBox.get_margin_left(St.Side.LEFT),
+          top: this.searchBox.get_margin_top(St.Side.TOP),
+          bottom: this.searchBox.get_margin_bottom(St.Side.BOTTOM),
+          right: this.searchBox.get_margin_right(St.Side.RIGHT),
+      };
       searchBoxBorder = {
         left: themeNode.get_border_width(St.Side.LEFT),
         top: themeNode.get_border_width(St.Side.TOP),
@@ -940,12 +940,12 @@ CinnamenuPanel.prototype = {
     };
     if (this.viewModeBoxWrapper.get_stage()) {
       let themeNode = this.viewModeBoxWrapper.get_theme_node();
-      /*viewModeBoxWrapperMargin = { // Not supported in Cinnamon
-          left: themeNode.get_margin(St.Side.LEFT),
-          top: themeNode.get_margin(St.Side.TOP),
-          bottom: themeNode.get_margin(St.Side.BOTTOM),
-          right: themeNode.get_margin(St.Side.RIGHT),
-      };*/
+      viewModeBoxWrapperMargin = {
+          left: this.viewModeBoxWrapper.get_margin_left(St.Side.LEFT),
+          top: this.viewModeBoxWrapper.get_margin_top(St.Side.TOP),
+          bottom: this.viewModeBoxWrapper.get_margin_bottom(St.Side.BOTTOM),
+          right: this.viewModeBoxWrapper.get_margin_right(St.Side.RIGHT),
+      };
       viewModeBoxWrapperBorder = {
         left: themeNode.get_border_width(St.Side.LEFT),
         top: themeNode.get_border_width(St.Side.TOP),
@@ -1016,17 +1016,17 @@ CinnamenuPanel.prototype = {
       let apps = this._listApplications(allAppcategory);
       if (apps && apps.length > 0) {
         let app = apps[0];
-        let appGridButton = new AppListGridButton(this, this.shortcutsBox, app, appType, true);
+        let appGridButton = new AppListGridButton(this, app, appType, true);
         let gridLayout = this.applicationsGridBox.layout_manager;
         gridLayout.pack(appGridButton.actor, 0, 0);
         if (appGridButton.actor.get_stage()) {
           let themeNode = appGridButton.actor.get_theme_node();
-          /*buttonMargin = { // Not supported in Cinnamon
-              left: themeNode.get_margin(St.Side.LEFT),
-              top: themeNode.get_margin(St.Side.TOP),
-              bottom: themeNode.get_margin(St.Side.BOTTOM),
-              right: themeNode.get_margin(St.Side.RIGHT),
-          };*/
+          buttonMargin = {
+              left: appGridButton.actor.get_margin_left(),
+              top: appGridButton.actor.get_margin_top(),
+              bottom: appGridButton.actor.get_margin_bottom(),
+              right: appGridButton.actor.get_margin_right(),
+          };
           buttonBorder = {
             left: themeNode.get_border_width(St.Side.LEFT),
             top: themeNode.get_border_width(St.Side.TOP),
@@ -1110,18 +1110,6 @@ CinnamenuPanel.prototype = {
     this._selectCategory(this.favAppCategory);
   },
 
-  _closeAllContextMenus: function(appListButton, isListView) {
-    for (let i = 0, len = this.appButtons.length; i < len; i++) {
-      if (appListButton.id !== this.appButtons[i].id) {
-        this.appButtons[i].closeMenu();
-      }
-    }
-
-    if (appListButton) {
-      appListButton.toggleMenu();
-    }
-  },
-
   _displayApplications: function(appList, refresh) {
     let isListView = this._applicationsViewMode === ApplicationsViewMode.LIST;
     let viewMode = this._applicationsViewMode;
@@ -1136,9 +1124,13 @@ CinnamenuPanel.prototype = {
     }
 
     this.appButtons = [];
+    this.menuIsOpen = null;
 
     let appButtonEnterEvent = (appButton, appType)=>{
       appButton.actor.connect('enter-event', Lang.bind(this, function() {
+        if (this.menuIsOpen && this.menuIsopen !== appButton.appIndex) {
+          return false;
+        }
         appButton.actor.add_style_class_name('menu-application-button-selected');
         if (appType === ApplicationType._applications) {
           this.selectedAppTitle.set_text(appButton.app.get_name());
@@ -1165,6 +1157,7 @@ CinnamenuPanel.prototype = {
             }
           }
         }
+        return true;
       }));
     };
 
@@ -1202,13 +1195,16 @@ CinnamenuPanel.prototype = {
           }
           this.menu.close();
         } else if (button === 3) {
-          this._closeAllContextMenus(appButton);
+          this.menuIsOpen = appButton.appIndex;
+          appButton.toggleMenu(viewMode === ApplicationsViewMode.LIST);
         }
       }));
     };
     if (!appList) {
       return
     }
+
+    let appIndex = 0;
 
     for (let z = 0, len = appList.length; z < len; z++) {
       let apps = appList[z].apps;
@@ -1223,18 +1219,18 @@ CinnamenuPanel.prototype = {
           this[appTypeKey] = [];
         }
         for (let i = 0, len = apps.length; i < len; i++) {
+          ++appIndex;
           let app = apps[i];
           // only add if not already in this._applications or refreshing
           if (refresh || !this._applications[app]) {
             let isListView = viewMode === ApplicationsViewMode.LIST;
-            let appButton = new AppListGridButton(this, this.shortcutsBox, app, appType, !isListView);
+            let appButton = new AppListGridButton(this, app, appType, !isListView, appIndex); // Maybe change the isGrideType param to check truth of list view for brevity.
             this.appButtons.push(appButton);
             appButtonEnterEvent(appButton, appType);
             appButtonLeaveEvent(appButton)
             appButtonButtonPressEvent(appButton);
             appButtonButtonReleaseEvent(appButton, appType, app);
             if (isListView) { // ListView
-              
               this.applicationsListBox.add_actor(appButton.actor);
             } else { // GridView
               let gridLayout = this.applicationsGridBox.layout_manager;

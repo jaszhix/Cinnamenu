@@ -282,7 +282,7 @@ function AppListGridButton() {
 }
 
 AppListGridButton.prototype = {
-  _init: function(_parent, menuContainer, app, appType, isGridType) {
+  _init: function(_parent, app, appType, isGridType, appIndex) {
 
     this._parent = _parent;
     this._applet = _parent._applet;
@@ -291,12 +291,7 @@ AppListGridButton.prototype = {
     this._stateChangedId = 0;
     let style;
 
-    this.id = Math.random();
-    this.menuContainer = menuContainer;
-    this.menu = new PopupMenu.PopupSubMenu(this.actor);
-    this.menu.actor.set_style_class_name('menu-context-menu');
-    //this.menu.connect('open-state-changed', Lang.bind(this, this._subMenuOpenStateChanged));
-    this.menuContainer.add_actor(this.menu.actor);
+    this.appIndex = appIndex;
 
     if (isGridType) {
       style = 'popup-menu-item cinnamenu-application-grid-button col'+this._applet.appsGridColumnCount.toString();
@@ -401,6 +396,17 @@ AppListGridButton.prototype = {
     });
     this.actor.set_child(this.buttonbox);
 
+    this.menu = new PopupMenu.PopupSubMenu(this.actor);
+    this.menu.actor.set_style_class_name('menu-context-menu');
+    this.menu.box.style_class = 'menu-favorites-box'
+    this.menu.box.style = 'z-index: 1;';
+    this.buttonbox.add_actor(this.menu.actor);
+
+    if (isGridType) {
+      // Fix the menu's position so it doesn't change the position of other actors.
+      this.menu.actor.set_position(-90, 50);
+    }
+
     // Connect signals
     this.actor.connect('touch-event', Lang.bind(this, this._onTouchEvent));
     if (appType == ApplicationType._applications) {
@@ -445,45 +451,11 @@ AppListGridButton.prototype = {
     return appIcon;
   },
 
-  // Returns the original actor that should align with the actor
-  // we show as the item is being dragged.
-  getDragActorSource: function() {
-    return this.icon;
-  },
-
-  shellWorkspaceLaunch: function(params) {
-    params = Params.parse(params, {
-      workspace: -1,
-      timestamp: 0
-    });
-
-    if (this._type == ApplicationType._applications) {
-      this.app.open_new_window(params.workspace);
-    } else if (this._type == ApplicationType._places) {
-      if (this.app.uri) {
-        this.app.app.launch_uris([this.app.uri], null);
-      } else {
-        this.app.launch();
-      }
-    } else if (this._type == ApplicationType._recent) {
-      Gio.app_info_launch_default_for_uri(this.app.uri, global.create_app_launch_context(0, -1));
-    }
-
-    this.actor.remove_style_pseudo_class('pressed');
-    this.actor.remove_style_class_name('selected');
-
-    if (this._parent) {
-      if (this._parent.menu.isOpen) {
-        this._parent.menu.toggle();
-      }
-    }
-  },
-
   closeMenu: function() {
     this.menu.close();
   },
 
-  toggleMenu: function() {
+  toggleMenu: function(isListView) {
     if (this._type !== ApplicationType._applications) {
       return false;
     }
@@ -513,6 +485,26 @@ AppListGridButton.prototype = {
         menuItem = new ApplicationContextMenuItem(this, _('Run with NVIDIA GPU'), 'run_with_nvidia_gpu', 'cpu');
         this.menu.addMenuItem(menuItem);
       }
+      this.actor.add_style_class_name('menu-application-button-selected');
+
+      // In grid mode we will ensure our menu isn't overlapped by any other actors.
+      if (!isListView) {
+        this.actor.raise_top();
+      }
+
+      // Make sure all other context menus are closed before toggle.
+      for (let i = 0, len = this._parent.appButtons.length; i < len; i++) {
+        if (this.appIndex !== this._parent.appButtons[i].appIndex) {
+          this._parent.appButtons[i].closeMenu();
+        }
+      }
+    } else {
+      if (!isListView) {
+        // Reset the actor depth.
+        this.actor.lower_bottom();
+      }
+      // Allow other buttons hover functions to take effect.
+      this._parent.menuIsOpen = null;
     }
     this.menu.toggle();
     return true
