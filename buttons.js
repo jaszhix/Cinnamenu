@@ -85,7 +85,7 @@ function CategoryListButton() {
 CategoryListButton.prototype = {
   __proto__: PopupMenu.PopupBaseMenuItem.prototype,
 
-  _init: function(dir, altNameText, altIconName) {
+  _init: function(_parent, dir, altNameText, altIconName) {
     PopupMenu.PopupBaseMenuItem.prototype._init.call(this, {
       hover: false
     });
@@ -96,11 +96,8 @@ CategoryListButton.prototype = {
     this._ignoreHoverSelect = null;
 
     this.actor.set_style_class_name('menu-category-button');
-    if (dir === 'recent' || dir === 'bookmarks' || dir === 'places') { // TBD
-      //this.actor.set_style('padding-bottom: -5px');
-    }
     this.actor._delegate = this;
-    let iconSize = 16;
+    let iconSize = _parent._applet.categoryIconSize;
 
     this._dir = dir;
     let categoryNameText = '';
@@ -377,6 +374,7 @@ AppListGridButton.prototype = {
       x_align: isGridType ? St.Align.MIDDLE : St.Align.END,
       y_align: isGridType ? St.Align.START : St.Align.END
     });
+    this.icon.realize();
     if (!isGridType) {
       this.buttonbox.add(this._iconContainer, {
         x_fill: false,
@@ -400,8 +398,8 @@ AppListGridButton.prototype = {
 
     this.menu = new PopupMenu.PopupSubMenu(this.actor);
     this.menu.actor.set_style_class_name('menu-context-menu');
-    this.menu.box.style_class = 'menu-favorites-box'
-    this.menu.box.style = 'z-index: 1;';
+    this.menu.box.set_style('background-color: ' + this._parent.theme.backgroundColor + '; border: 1px solid' + this._parent.theme.borderColor 
+      + '; border-radius: ' + this._parent.theme.borderRadius + 'px; padding-top: ' + this._parent.theme.padding + 'px; padding-bottom: ' + this._parent.theme.padding + 'px;');
     this.buttonbox.add_actor(this.menu.actor);
     this.actor.set_child(this.buttonbox);
 
@@ -474,6 +472,7 @@ AppListGridButton.prototype = {
         this.menu.box.remove_actor(children[i]);
       }
       this._parent.menuIsOpen = this.appIndex;
+
       let menuItem;
       menuItem = new ApplicationContextMenuItem(this, _('Add to panel'), 'add_to_panel', 'list-add');
       this.menu.addMenuItem(menuItem);
@@ -519,6 +518,15 @@ AppListGridButton.prototype = {
     this.menu.toggle();
     return true
   },
+
+  destroy: function() {
+    this.actor._delegate = null;
+    this.removeAll();
+    this.menu.destroy();
+    this.buttonbox.destroy_all_children();
+    this.actor.destroy_all_children()
+    this.actor.destroy();
+  }
 };
 Signals.addSignalMethods(AppListGridButton.prototype);
 
@@ -555,9 +563,6 @@ GroupButton.prototype = {
     this.actor.style = 'padding-top: ' + (adjustedIconSize / 3) + 'px;padding-bottom: ' + (adjustedIconSize / 3) + 'px; margin:auto;'
     this.actor.add_style_class_name('menu-favorites-button');
     this.actor._delegate = this;
-    this.buttonbox = new St.BoxLayout({
-      vertical: true
-    });
 
     if (iconName && iconSize) {
       this._iconSize = adjustedIconSize;
@@ -632,5 +637,15 @@ GroupButton.prototype = {
 
   _onButtonReleaseEvent: function(actor) {
     return false;
-  }
+  },
+
+  destroy: function(actor) {
+    this._parent = null;
+    this.label.destroy();
+    if (this.icon) {
+      this.icon.destroy();
+    }
+
+    PopupMenu.PopupBaseMenuItem.prototype.destroy.call(this);
+  },
 };

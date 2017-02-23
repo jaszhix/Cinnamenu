@@ -329,8 +329,8 @@ CinnamenuButton.prototype = {
         })
       },
       {
-        key: 'shortcuts-icon-size',
-        value: 'shortcutsIconSize',
+        key: 'category-icon-size',
+        value: 'categoryIconSize',
         cb: Lang.bind(this, function() {
           if (this.appsMenuButton) {
             this.appsMenuButton.refresh();

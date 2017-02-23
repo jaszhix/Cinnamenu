@@ -133,6 +133,19 @@ CinnamenuPanel.prototype = {
     this.actor.reactive = !global.settings.get_boolean('panel-edit-mode')
   },
 
+  introspectTheme: function() {
+    let appletMenuThemeNode = this._applet.menu.actor.get_theme_node();
+    let mainBoxThemeNode = this.mainBox.get_theme_node();
+    this.theme = {
+      backgroundColor: appletMenuThemeNode.get_background_color().to_string().substring(0, 7),
+      foregroundColor: appletMenuThemeNode.get_foreground_color().to_string().substring(0, 7),
+      borderColor: appletMenuThemeNode.get_border_color(St.Side.TOP).to_string().substring(0, 7),
+      borderRadius: appletMenuThemeNode.get_border_radius(St.Corner.TOPRIGHT),
+      padding: mainBoxThemeNode.get_padding(St.Side.TOP)
+    };
+    global.logError(mainBoxThemeNode.get_padding(St.Side.TOP))
+  },
+
   _onOpenStateToggled: function(menu, open) {
     if (global.settings.get_boolean('panel-edit-mode') || this.menuIsOpen) {
       return false;
@@ -141,6 +154,7 @@ CinnamenuPanel.prototype = {
       this._applet.actor.handler_block(this._applet._appletEnterEventId);
     }
     if (open) {
+      this.introspectTheme();
       // Set focus to search entry
       global.stage.set_key_focus(this.searchEntry);
 
@@ -1910,7 +1924,7 @@ CinnamenuPanel.prototype = {
     this.applicationsByCategory = {};
 
     // Load 'all applications' category
-    let allAppCategory = new CategoryListButton('all', _('All Applications'), 'computer');
+    let allAppCategory = new CategoryListButton(this, 'all', _('All Applications'), 'computer');
     this.allAppCategory = allAppCategory;
     allAppCategory.setButtonEnterCallback(Lang.bind(this, function() {
       allAppCategory.actor.add_style_class_name('menu-category-button-selected');
@@ -1936,7 +1950,7 @@ CinnamenuPanel.prototype = {
     this.categoriesBox.add_actor(allAppCategory.actor);
 
     // Load 'favorite applications' category
-    let favAppCategory = new CategoryListButton('favorites', _('Favorite Apps'), 'address-book-new');
+    let favAppCategory = new CategoryListButton(this, 'favorites', _('Favorite Apps'), 'address-book-new');
     this.favAppCategory = favAppCategory;
     favAppCategory.setButtonEnterCallback(Lang.bind(this, function() {
       favAppCategory.actor.add_style_class_name('menu-category-button-selected');
@@ -2048,7 +2062,7 @@ CinnamenuPanel.prototype = {
         this.applicationsByCategory[dir.get_menu_id()] = [];
         this._loadCategories(dir);
         if (this.applicationsByCategory[dir.get_menu_id()].length > 0) {
-          let appCategory = new CategoryListButton(dir);
+          let appCategory = new CategoryListButton(this, dir);
           appCategoryButtonEnterEvent(appCategory);
           appCategoryButtonLeaveEvent(appCategory);
           appCategoryButtonReleaseEvent(appCategory);
@@ -2058,7 +2072,7 @@ CinnamenuPanel.prototype = {
     }
 
     // Load 'places' category
-    this.placesCategory = new CategoryListButton('places', _('Places'), 'folder');
+    this.placesCategory = new CategoryListButton(this, 'places', _('Places'), 'folder');
     this.placesCategory.setButtonEnterCallback(Lang.bind(this, function() {
       this.placesCategory.actor.add_style_class_name('menu-category-button-selected');
       this.selectedAppTitle.set_text(this.placesCategory.label.get_text());
@@ -2084,7 +2098,7 @@ CinnamenuPanel.prototype = {
 
     // Load 'recent' category
     if (recentEnabled) {
-      this.recentCategory = new CategoryListButton('recent', _('Recent'), 'folder-recent');
+      this.recentCategory = new CategoryListButton(this, 'recent', _('Recent'), 'folder-recent');
       this.recentCategory.setButtonEnterCallback(Lang.bind(this, function() {
         this.recentCategory.actor.add_style_class_name('menu-category-button-selected');
         this.selectedAppTitle.set_text(this.recentCategory.label.get_text());
@@ -2110,7 +2124,7 @@ CinnamenuPanel.prototype = {
     }
 
     // Load 'bookmarks' category
-    this.webBookmarksCategory = new CategoryListButton('bookmarks', _('Bookmarks'), 'emblem-favorite');
+    this.webBookmarksCategory = new CategoryListButton(this, 'bookmarks', _('Bookmarks'), 'emblem-favorite');
     this.webBookmarksCategory.setButtonEnterCallback(Lang.bind(this, function() {
       this.webBookmarksCategory.actor.add_style_class_name('menu-category-button-selected');
       this.selectedAppTitle.set_text(this.webBookmarksCategory.label.get_text());

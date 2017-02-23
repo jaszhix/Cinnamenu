@@ -15,7 +15,7 @@
   },
   "header1": {
     "type": "header",
-    "description": "Panel Appearance"
+    "description": "Appearance"
   },
   "menu-icon-custom": {
     "type": "checkbox",
@@ -37,15 +37,15 @@
     "description": "Set the custom menu button icon name",
     "tooltip": "Set the custom menu button icon name"
   },
-  "shortcuts-icon-size": {
+  "category-icon-size": {
     "type": "spinbutton",
-    "default": 18,
+    "default": 24,
     "min": 16,
     "max": 256,
     "step": 1,
     "units": "pixels",
-    "description": "Shortcuts Panel icon size",
-    "tooltip": "Shortcuts Panel icon size"
+    "description": "Category icon size",
+    "tooltip": "Category icon size"
   },
   "apps-list-icon-size": {
     "type": "spinbutton",
