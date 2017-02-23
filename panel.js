@@ -143,7 +143,6 @@ CinnamenuPanel.prototype = {
       borderRadius: appletMenuThemeNode.get_border_radius(St.Corner.TOPRIGHT),
       padding: mainBoxThemeNode.get_padding(St.Side.TOP)
     };
-    global.logError(mainBoxThemeNode.get_padding(St.Side.TOP))
   },
 
   _onOpenStateToggled: function(menu, open) {
@@ -588,8 +587,8 @@ CinnamenuPanel.prototype = {
     let bookmarks = [];
 
     bookmarks = bookmarks.concat(Chromium.bookmarks);
-    bookmarks = bookmarks.concat(Firefox.bookmarks);
     bookmarks = bookmarks.concat(GoogleChrome.bookmarks);
+    bookmarks = bookmarks.concat(Firefox.bookmarks);
     bookmarks = bookmarks.concat(Midori.bookmarks);
     bookmarks = bookmarks.concat(Opera.bookmarks);
 
@@ -605,7 +604,18 @@ CinnamenuPanel.prototype = {
       }
     }
 
-    //res.sort(this._searchWebBookmarks.bookmarksSort);
+    // Create a unique list of bookmarks across all browsers.
+    let arr = {};
+
+    for (let i=0, len = res.length; i < len; i++ ) {
+      arr[res[i].uri] = res[i];
+    }
+
+    res = []
+    for (let key in arr) {
+      res.push(arr[key]);
+    }
+
     return res;
   },
 
