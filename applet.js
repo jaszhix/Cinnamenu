@@ -165,6 +165,7 @@ CinnamenuButton.prototype = {
     } else {
       if (this.panelMenuLabelText !== '') {
         this.set_applet_label(_(this.menuLabel)); // TBD
+        this.set_applet_tooltip(_(this.menuLabel));
       } else {
         this.set_applet_label('');
       }

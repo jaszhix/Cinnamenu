@@ -111,6 +111,7 @@ CinnamenuPanel.prototype = {
     this._selectedItemIndex = null;
     this._previousSelectedItemIndex = null;
     this._activeContainer = null;
+    this.menuIsOpen = null;
     this._isBumblebeeInstalled = GLib.file_test('/usr/bin/optirun', GLib.FileTest.EXISTS);
 
     this._searchWebBookmarks = new SearchWebBookmarks();
@@ -133,7 +134,7 @@ CinnamenuPanel.prototype = {
   },
 
   _onOpenStateToggled: function(menu, open) {
-    if (global.settings.get_boolean('panel-edit-mode')) {
+    if (global.settings.get_boolean('panel-edit-mode') || this.menuIsOpen) {
       return false;
     }
     if (this._applet._appletEnterEventId > 0) {
@@ -1180,6 +1181,12 @@ CinnamenuPanel.prototype = {
         appButton.actor.remove_style_pseudo_class('pressed');
         let button = e.get_button();
         if (button === 1) {
+          if (this.menuIsOpen) {
+            if (this.menuIsopen !== appButton.appIndex) {
+              appButton.menu._activeMenuItem.activate();
+            }
+            return false;
+          }
           this.selectedAppTitle.set_text('');
           this.selectedAppDescription.set_text('');
           if (appType === ApplicationType._applications) {
@@ -1195,7 +1202,6 @@ CinnamenuPanel.prototype = {
           }
           this.menu.close();
         } else if (button === 3) {
-          this.menuIsOpen = appButton.appIndex;
           appButton.toggleMenu(viewMode === ApplicationsViewMode.LIST);
         }
       }));
@@ -1240,12 +1246,13 @@ CinnamenuPanel.prototype = {
                 column = 0;
                 rownum++;
               }
+              appButton.setColumn(column);
             }
           }
           if (!refresh) {
             this[appTypeKey][app] = app;
           }
-        } 
+        }
       }
     }
   },
