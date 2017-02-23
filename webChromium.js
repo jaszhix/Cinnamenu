@@ -117,7 +117,7 @@ function init() {
 
   if (!_bookmarksFile.query_exists(null)) {
     _reset();
-    return;
+    return false;
   }
 
   _bookmarksMonitor = _bookmarksFile.monitor_file(
@@ -126,6 +126,7 @@ function init() {
     'changed', Lang.bind(this, _readBookmarks));
 
   _readBookmarks();
+  return true;
 }
 
 function deinit() {

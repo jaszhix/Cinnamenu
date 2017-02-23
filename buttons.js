@@ -48,22 +48,6 @@ SearchWebBookmarks.prototype = {
     Opera.init();
   },
 
-  bookmarksSort: function(a, b) {
-    if (a.score < b.score) {
-      return 1;
-    }
-    if (a.score > b.score) {
-      return -1;
-    }
-    if (a.name < b.name) {
-      return -1;
-    }
-    if (a.name > b.name) {
-      return 1;
-    }
-    return 0;
-  },
-
   destroy: function() {
     Chromium.deinit();
     Firefox.deinit();
@@ -280,7 +264,7 @@ function AppListGridButton() {
 }
 
 AppListGridButton.prototype = {
-  _init: function(_parent, app, appType, isGridType, appIndex) {
+  _init: function(_parent, app, appType, isGridType, appIndex, appListLength) {
 
     this._parent = _parent;
     this._applet = _parent._applet;
@@ -296,7 +280,14 @@ AppListGridButton.prototype = {
     if (isGridType) {
       style = 'popup-menu-item cinnamenu-application-grid-button col'+this._applet.appsGridColumnCount.toString();
 
-      this._iconSize = (this._applet.appsGridIconSize > 0) ? this._applet.appsGridIconSize : 64;
+      if (this._applet.appsGridIconScale) {
+        let size = Math.round(Math.abs((Math.round(appListLength / this._applet.appsGridColumnCount)) - 2048) / appListLength);
+        size = isNaN(size) || size < 48 ? 48 : size > 102 ? 102 : size;
+        this._iconSize = size
+      } else {
+        this._iconSize = this._applet.appsGridIconSize > 0 ? this._applet.appsGridIconSize : 64;
+      }
+
     } else {
       style = 'menu-application-button';
       this._iconSize = (this._applet.appsListIconSize > 0) ? this._applet.appsListIconSize : 28;
@@ -355,7 +346,7 @@ AppListGridButton.prototype = {
     }
 
     this._dot = new St.Widget({
-      style: 'width: 10px; height: 3px; background-color: #FFFFFF; margin-bottom: 2px;',
+      style: 'width: 5px; height: 5px; background-color: ' + this._parent.theme.mainBoxBorderColor + '; margin-bottom: 2px; border-radius: 128px;',
       layout_manager: new Clutter.BinLayout(),
       x_expand: true,
       y_expand: true,

@@ -5,6 +5,7 @@ const CMenu = imports.gi.CMenu;
 const Clutter = imports.gi.Clutter;
 const St = imports.gi.St;
 const Util = imports.misc.util;
+const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
 const Lang = imports.lang;
 const GnomeSession = imports.misc.gnomeSession;
@@ -140,8 +141,9 @@ CinnamenuPanel.prototype = {
       backgroundColor: appletMenuThemeNode.get_background_color().to_string().substring(0, 7),
       foregroundColor: appletMenuThemeNode.get_foreground_color().to_string().substring(0, 7),
       borderColor: appletMenuThemeNode.get_border_color(St.Side.TOP).to_string().substring(0, 7),
+      mainBoxBorderColor: mainBoxThemeNode.get_foreground_color().to_string().substring(0, 7),
       borderRadius: appletMenuThemeNode.get_border_radius(St.Corner.TOPRIGHT),
-      padding: mainBoxThemeNode.get_padding(St.Side.TOP)
+      padding: mainBoxThemeNode.get_padding(St.Side.TOP),
     };
   },
 
@@ -194,7 +196,6 @@ CinnamenuPanel.prototype = {
 
       // calculate applications list/grid box width
       this._calculateApplicationsBoxWidth(this._applicationsViewMode === ApplicationsViewMode.LIST);
-      this._adjustThemeForCompatibility();
 
       // Hide applications list/grid box depending on view mode
       if (this._applicationsViewMode === ApplicationsViewMode.LIST) {
@@ -439,7 +440,6 @@ CinnamenuPanel.prototype = {
   _clearTabFocusSelections: function(selectedBox, resetSearch) {
     this._selectedItemIndex = -1;
     this._clearActiveContainerSelections();
-    this._adjustThemeForCompatibility();
 
     if (!selectedBox) {
       return;
@@ -716,189 +716,6 @@ CinnamenuPanel.prototype = {
     return res;
   },
 
-  _adjustThemeForCompatibility: function() {
-    return false; // TBD - this function breaks the top button box styling.
-    // Certain menu objects get color, border, etc from theme
-    /*let themeBorderColor = null,
-      themeBorderColorAlpha = '1';
-    let themeBorderColor2 = null,
-      themeBorderColor2Alpha = '1';
-    let themeBorderColor3 = null,
-      themeBorderColor3Alpha = '1';
-    let themeBackgroundColor = null,
-      themeBackgroundColorAlpha = '1';
-    let themeTextColor = null,
-      themeTextColorAlpha = '1';
-    let themeButtonTextColor = null,
-      themeButtonTextColorAlpha = '1';
-    let themeButtonTextColor2 = null,
-      themeButtonTextColor2Alpha = '1';
-    let themeBoxShadow = null;
-    let themeBoxShadowColor = null,
-      themeBoxShadowColorAlpha = '1';
-    let themeBoxShadowInset, themeBoxShadowXOffset, themeBoxShadowYOffset;
-    if (this.menu.actor.get_stage()) {
-      let themeNode = this.menu.actor.get_theme_node();
-      themeBorderColor = themeNode.get_color('-arrow-border-color');
-      if (themeBorderColor.alpha) {
-        themeBorderColorAlpha = themeBorderColor.alpha / 255;
-      }
-      themeTextColor = themeNode.get_color('color');
-      if (themeTextColor.alpha) {
-        themeTextColorAlpha = themeTextColor.alpha / 255;
-      }
-    }
-    if (this._dummyButton.get_stage()) {
-      let themeNode = this._dummyButton.get_theme_node();
-      themeBackgroundColor = themeNode.get_background_color();
-      if (themeBackgroundColor.alpha) {
-        themeBackgroundColorAlpha = themeBackgroundColor.alpha / 255;
-      }
-      themeBoxShadow = themeNode.get_box_shadow();
-      if (themeBoxShadow) {
-        themeBoxShadowInset = themeBoxShadow.inset;
-        if (themeBoxShadowInset) {
-          themeBoxShadowInset = 'inset';
-        } else {
-          themeBoxShadowInset = '';
-        }
-        themeBoxShadowXOffset = themeBoxShadow.xoffset;
-        themeBoxShadowYOffset = themeBoxShadow.yoffset;
-        themeBoxShadowColor = themeBoxShadow.color;
-        if (themeBoxShadowColor.alpha) {
-          themeBoxShadowColorAlpha = themeBoxShadowColor.alpha / 255;
-        }
-      }
-      themeButtonTextColor = themeNode.get_color('color');
-      if (themeButtonTextColor.alpha) {
-        themeButtonTextColorAlpha = themeButtonTextColor.alpha / 255;
-      }
-    }
-    if (this._dummyButton2.get_stage()) {
-      let themeNode = this._dummyButton2.get_theme_node();
-      themeBorderColor2 = themeNode.get_border_color(St.Side.TOP);
-      if (themeBorderColor2.alpha) {
-        themeBorderColor2Alpha = themeBorderColor2.alpha / 255;
-      }
-      themeButtonTextColor2 = themeNode.get_color('color');
-      if (themeButtonTextColor2.alpha) {
-        themeButtonTextColor2Alpha = themeButtonTextColor2.alpha / 255;
-      }
-    }
-    
-    if (this._dummySeparator.actor.get_stage()) {
-      let themeNode = this._dummySeparator.actor.get_theme_node();
-      themeBorderColor3 = themeNode.get_border_color(St.Side.TOP);
-      if (themeBorderColor3.alpha) {
-        themeBorderColor3Alpha = themeBorderColor3.alpha / 255;
-      }
-    }
-
-    let style1 = '', style2 = '',
-      style3 = '', style4 = '',
-      style5 = '', style6 = '';
-    let delimeter1 = '', delimeter2 = '',
-      delimeter3 = '', delimeter4 = '',
-      delimeter5 = '', delimeter6 = '';
-    if (themeBorderColor) {
-      if (style1 != '') {
-        delimeter1 = '; ';
-      }
-      if (style2 != '') {
-        delimeter2 = '; ';
-      }
-      if (style3 != '') {
-        delimeter3 = '; ';
-      }
-      if (style5 != '') {
-        delimeter5 = '; ';
-      }
-      style1 += delimeter1 + 'border-color: rgba(' + themeBorderColor.red + ',' + themeBorderColor.green + ',' +
-        themeBorderColor.blue + ',' + themeBorderColorAlpha + ')';
-      style2 += delimeter2 + 'border-color: rgba(' + themeBorderColor.red + ',' + themeBorderColor.green + ',' +
-        themeBorderColor.blue + ',' + themeBorderColorAlpha + ')';
-      style3 += delimeter3 + 'border-color: rgba(' + themeBorderColor.red + ',' + themeBorderColor.green + ',' +
-        themeBorderColor.blue + ',' + themeBorderColorAlpha + ')';
-      style5 += delimeter5 + 'border-color: rgba(' + themeBorderColor.red + ',' + themeBorderColor.green + ',' +
-        themeBorderColor.blue + ',' + themeBorderColorAlpha + ')';
-    }
-    if (themeBackgroundColor) {
-      if (style3 != '') {
-        delimeter3 = '; ';
-      }
-      style3 += delimeter3 + 'background-color: rgba(' + themeBackgroundColor.red + ',' + themeBackgroundColor.green +
-        ',' + themeBackgroundColor.blue + ',' + themeBackgroundColorAlpha + ')';
-    }
-    if (themeTextColor) {
-      if (style2 != '') {
-        delimeter2 = '; ';
-      }
-      style2 += delimeter2 + 'color: rgba(' + themeTextColor.red + ',' + themeTextColor.green + ',' +
-        themeTextColor.blue + ',' + themeTextColorAlpha + ')';
-    }
-    if (themeButtonTextColor) {
-      if (style3 != '') {
-        delimeter3 = '; ';
-      }
-      style3 += delimeter3 + 'color: rgba(' + themeButtonTextColor.red + ',' + themeButtonTextColor.green + ',' +
-        themeButtonTextColor.blue + ',' + themeButtonTextColorAlpha + ')';
-    }
-    if (themeBoxShadow) {
-      if (style3 != '') {
-        delimeter3 = '; ';
-      }
-      style3 += delimeter3 + 'box-shadow: ' + themeBoxShadowInset + ' ' + themeBoxShadowXOffset + 'px ' +
-        themeBoxShadowYOffset + 'px ' + ' rgba(' + themeBoxShadowColor.red + ',' + themeBoxShadowColor.green + ',' +
-        themeBoxShadowColor.blue + ',' + themeBoxShadowColorAlpha + ')';
-    }
-    if (themeBorderColor2) {
-      if (style4 != '') {
-        delimeter4 = '; ';
-      }
-      style4 += delimeter4 + 'border-color: rgba(' + themeBorderColor2.red + ',' + themeBorderColor2.green + ',' +
-        themeBorderColor2.blue + ',' + themeBorderColor2Alpha + ')';
-    }
-    if (themeButtonTextColor2) {
-      if (style5 != '') {
-        delimeter5 = '; ';
-      }
-      style5 += delimeter5 + 'color: rgba(' + themeButtonTextColor2.red + ',' + themeButtonTextColor2.green + ',' +
-        themeButtonTextColor2.blue + ',' + themeButtonTextColor2Alpha + ')';
-    }
-    if (themeBorderColor3) {
-      if (style6 != '') {
-        delimeter6 = '; ';
-      }
-      style6 += delimeter6 + 'border-color: rgba(' + themeBorderColor3.red + ',' + themeBorderColor3.green + ',' +
-        themeBorderColor3.blue + ',' + themeBorderColor3Alpha + ')';
-    }
-
-    this._style1 = style1;
-    this._style2 = style5;
-
-    this.searchEntry.set_style(style1);
-    this.recentCategory.actor.set_style(style1);
-    this.webBookmarksCategory.actor.set_style(style1);
-    this.placesCategory.actor.set_style(style1);
-    this.toggleStartupAppsView.actor.set_style(style1);
-    this.toggleListGridView.actor.set_style(style1);
-
-    this.userGroupBox.set_style(style3);
-    this.viewModeBox.set_style(style3);
-
-    // this.shortcutsScrollBox.set_style(style4);
-    // this.groupCategoriesWorkspacesScrollBox.set_style(style4);
-    // this.applicationsScrollBox.set_style(style4);
-    this.shortcutsScrollBox.set_style(style6);
-    this.groupCategoriesWorkspacesScrollBox.set_style(style6);
-    this.applicationsScrollBox.set_style(style6);
-
-    this.bottomPane.set_style(null);
-    this.applicationsBoxWrapper.set_style(null);
-    this.searchBox.set_style(null);
-    return true;*/
-  },
-
   _calculateApplicationsBoxWidth: function(isListView) {
     // Calculate visible menu boxes and adjust width accordingly
     let searchBoxWidth = this.searchBox.width;
@@ -1041,7 +858,7 @@ CinnamenuPanel.prototype = {
       let apps = this._listApplications(allAppcategory);
       if (apps && apps.length > 0) {
         let app = apps[0];
-        let appGridButton = new AppListGridButton(this, app, appType, true);
+        let appGridButton = new AppListGridButton(this, app, appType, true, 0);
         let gridLayout = this.applicationsGridBox.layout_manager;
         gridLayout.pack(appGridButton.actor, 0, 0);
         if (appGridButton.actor.get_stage()) {
@@ -1129,6 +946,8 @@ CinnamenuPanel.prototype = {
       let gridLayout = this.applicationsGridBox.layout_manager;
       gridLayout.set_column_spacing(extraWidth / (this._appGridColumns - 1));
     }
+    this.topPane.style = 'padding-bottom: ' + this.theme.padding + 'px;';
+    this.bottomPane.style = 'padding-top: ' + this.theme.padding + 'px;';
   },
 
   _resetDisplayApplicationsToStartup: function() { // TBD
@@ -1228,6 +1047,7 @@ CinnamenuPanel.prototype = {
         } else if (button === 3) {
           appButton.toggleMenu(viewMode === ApplicationsViewMode.LIST);
         }
+        return true;
       }));
     };
     if (!appList) {
@@ -1254,7 +1074,7 @@ CinnamenuPanel.prototype = {
           // only add if not already in this._applications or refreshing
           if (refresh || !this._applications[app]) {
             let isListView = viewMode === ApplicationsViewMode.LIST;
-            let appButton = new AppListGridButton(this, app, appType, !isListView, appIndex); // Maybe change the isGrideType param to check truth of list view for brevity.
+            let appButton = new AppListGridButton(this, app, appType, !isListView, appIndex, len); // Maybe change the isGrideType param to check truth of list view for brevity.
             this.appButtons.push(appButton);
             appButtonEnterEvent(appButton, appType);
             appButtonLeaveEvent(appButton)
@@ -1735,11 +1555,15 @@ CinnamenuPanel.prototype = {
       vertical: true
     });
 
+    // Allow the menu to be taller for high resolution displays.
+    let menuHeight = Math.round(Main.layoutManager.primaryMonitor.height / 2.055)
+    menuHeight = menuHeight < 530 ? 530 : menuHeight;
+
     // groupCategoriesWorkspacesScrollBox allows categories or workspaces to scroll vertically
     this.groupCategoriesWorkspacesScrollBox = new St.ScrollView({
       x_fill: true,
       y_fill: false,
-      //height: 600,
+      height: menuHeight,
       y_align: St.Align.START,
       style_class: 'vfade cinnamenu-categories-workspaces-scrollbox'
     });
@@ -1837,22 +1661,6 @@ CinnamenuPanel.prototype = {
       y_align: St.Align.MIDDLE
     });
 
-    // SearchBox
-    let searchEntryAdditionalStyle = '';
-    if (this._applet.appsGridIconSize == 16) {
-      searchEntryAdditionalStyle += ' x16';
-    } else if (this._applet.appsGridIconSize == 22) {
-      searchEntryAdditionalStyle += ' x22';
-    } else if (this._applet.appsGridIconSize == 24) {
-      searchEntryAdditionalStyle += ' x24';
-    } else if (this._applet.appsGridIconSize == 32) {
-      searchEntryAdditionalStyle += ' x32';
-    } else if (this._applet.appsGridIconSize == 48) {
-      searchEntryAdditionalStyle += ' x48';
-    } else if (this._applet.appsGridIconSize == 64) {
-      searchEntryAdditionalStyle += ' x64';
-    }
-
     this._searchInactiveIcon = new St.Icon({
       style_class: 'menu-search-entry-icon',
       icon_name: 'edit-find'
@@ -1862,11 +1670,11 @@ CinnamenuPanel.prototype = {
       icon_name: 'edit-clear'
     });
     this.searchBox = new St.BoxLayout({
-      style_class: 'menu-search-box' + searchEntryAdditionalStyle
+      style_class: 'menu-search-box'
     });
     this.searchEntry = new St.Entry({
       name: 'menu-search-entry',
-      style_class: 'menu-search-entry' + searchEntryAdditionalStyle,
+      style_class: 'menu-search-entry',
       hint_text: _('Type to search...'),
       track_hover: true,
       can_focus: true
@@ -2304,6 +2112,7 @@ CinnamenuPanel.prototype = {
     });
     this.applicationsScrollBox.add_actor(this.applicationsBoxWrapper);
     this.applicationsScrollBox.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
+    this.applicationsScrollBox.set_auto_scrolling(this._applet.enableAutoScroll);
     this.applicationsScrollBox.set_mouse_scrolling(true);
 
     // Place boxes in proper containers. The order added determines position

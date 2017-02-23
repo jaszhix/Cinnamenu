@@ -310,6 +310,11 @@ CinnamenuButton.prototype = {
         cb: null
       },
       {
+        key: 'enable-autoscroll',
+        value: 'enableAutoscroll',
+        cb: null
+      },
+      {
         key: 'menu-label',
         value: 'menuLabel',
         cb: this._updateIconAndLabel
@@ -345,6 +350,11 @@ CinnamenuButton.prototype = {
       {
         key: 'apps-grid-icon-size',
         value: 'appsGridIconSize',
+        cb: null
+      },
+      {
+        key: 'apps-grid-icon-scale',
+        value: 'appsGridIconScale',
         cb: null
       },
       {
