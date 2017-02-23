@@ -2305,6 +2305,14 @@ CinnamenuPanel.prototype = {
       x_align: St.Align.END,
       y_align: St.Align.MIDDLE
     });
+    let topPaneSpacer1 = new St.Label({
+      text: '    '
+    });
+    this.topPane.add(topPaneSpacer1, {
+      width: 50,
+      x_align: St.Align.START,
+      y_align: St.Align.MIDDLE
+    });
     this.topPane.add(this.viewModeBoxWrapper, {
       x_align: St.Align.START,
       y_align: St.Align.MIDDLE
