@@ -134,7 +134,7 @@ CinnamenuPanel.prototype = {
     this.actor.reactive = !global.settings.get_boolean('panel-edit-mode')
   },
 
-  introspectTheme: function() {
+  introspectTheme: function(cb) {
     let appletMenuThemeNode = this._applet.menu.actor.get_theme_node();
     let mainBoxThemeNode = this.mainBox.get_theme_node();
     this.theme = {
@@ -145,6 +145,9 @@ CinnamenuPanel.prototype = {
       borderRadius: appletMenuThemeNode.get_border_radius(St.Corner.TOPRIGHT),
       padding: mainBoxThemeNode.get_padding(St.Side.TOP),
     };
+    if (typeof cb === 'function') {
+      Mainloop.idle_add(cb);
+    }
   },
 
   _onOpenStateToggled: function(menu, open) {
@@ -155,73 +158,65 @@ CinnamenuPanel.prototype = {
       this._applet.actor.handler_block(this._applet._appletEnterEventId);
     }
     if (open) {
-      this.introspectTheme();
-      // Set focus to search entry
-      global.stage.set_key_focus(this.searchEntry);
+      this.introspectTheme(()=>{
+        // Set focus to search entry
+        global.stage.set_key_focus(this.searchEntry);
 
-      this._menuToggleTimeoutId = Mainloop.timeout_add(100, Lang.bind(this, this.resetSearchWithFocus));
+        this._menuToggleTimeoutId = Mainloop.timeout_add(100, Lang.bind(this, this.resetSearchWithFocus));
 
-      // Load Startup Applications category
-      this._selectedItemIndex = null;
-      this._activeContainer = null;
-      this._applications = [];
-      this._places = [];
-      this._recent = [];
-      this._applicationsViewMode = this._applet.startupViewMode;
-      this._appGridColumns = this._applet.appsGridColumnCount;
+        // Load Startup Applications category
+        this._selectedItemIndex = null;
+        this._activeContainer = null;
+        this._applications = [];
+        this._places = [];
+        this._recent = [];
+        this._applicationsViewMode = this._applet.startupViewMode;
+        this._appGridColumns = this._applet.appsGridColumnCount;
 
-      // Set height of viewModeBox to searchBox
-      this.viewModeBox.height = this.searchBox.height;
-      this._setButtonHeight(this.toggleListGridView.actor, this.searchBox.height);
+        // Set height of viewModeBox to searchBox
+        this.viewModeBox.height = this.searchBox.height;
 
-      // Set Category
-      this.categoriesBox.show();
-      this._widthCategoriesBox = 0;
-      this._widthShortcutsBox = 0;
+        // Set Category
+        this.categoriesBox.show();
+        this._widthCategoriesBox = 0;
 
-      // Adjust width of categories box and thumbnails box depending on if shortcuts are shown
-      // Determine width based on user-power group button widths
-      this._widthShortcutsBox = this.shortcutsScrollBox.width;
-      if (this.powerGroupBox.width > (this.groupCategoriesWorkspacesScrollBox.width + this.shortcutsScrollBox.width)) {
-        let categoryWidth = this.powerGroupBox.width - this.shortcutsScrollBox.width;
-        this.groupCategoriesWorkspacesScrollBox.width = categoryWidth;
-        this.categoriesBox.width = categoryWidth;
-        this._widthCategoriesBox = categoryWidth;
-      } else {
-        let groupWidth = this.groupCategoriesWorkspacesScrollBox.width + this.shortcutsScrollBox.width;
+        // Adjust width of categories box
+        // Determine width based on user-power group button widths
+        let groupWidth = this.groupCategoriesWorkspacesScrollBox.width;
         this.powerGroupBox.width = groupWidth;
         this.categoriesBox.width = this.groupCategoriesWorkspacesScrollBox.width;
         this._widthCategoriesBox = this.groupCategoriesWorkspacesScrollBox.width;
-      }
 
-      // calculate applications list/grid box width
-      this._calculateApplicationsBoxWidth(this._applicationsViewMode === ApplicationsViewMode.LIST);
+        // calculate applications list/grid box width
+        this._calculateApplicationsBoxWidth(this._applicationsViewMode === ApplicationsViewMode.LIST);
 
-      // Hide applications list/grid box depending on view mode
-      if (this._applicationsViewMode === ApplicationsViewMode.LIST) {
-        this.toggleListGridView.setIcon('view-grid-symbolic');
-        this._switchApplicationsView(ApplicationsViewMode.LIST);
-      } else {
-        this.toggleListGridView.setIcon('view-list-symbolic');
-        this._switchApplicationsView(ApplicationsViewMode.GRID);
-      }
+        // Hide applications list/grid box depending on view mode
+        if (this._applicationsViewMode === ApplicationsViewMode.LIST) {
+          this.toggleListGridView.setIcon('view-grid-symbolic');
+          this._switchApplicationsView(ApplicationsViewMode.LIST);
+        } else {
+          this.toggleListGridView.setIcon('view-list-symbolic');
+          this._switchApplicationsView(ApplicationsViewMode.GRID);
+        }
 
-      // Display startup apps
-      this._resetDisplayApplicationsToStartup();
+        // Display startup apps
+        this._resetDisplayApplicationsToStartup();
 
-      // Set height (we also set constraints on scrollboxes
-      // Why does height need to be set when already set constraints? because of issue noted below
-      // ISSUE: If height isn't set, then popup menu height will expand when application buttons are added
-      let height = this.groupCategoriesWorkspacesScrollBox.height;
-      this.applicationsScrollBox.height = height;
-      this.shortcutsScrollBox.height = height;
+        // Set height (we also set constraints on scrollboxes
+        // Why does height need to be set when already set constraints? because of issue noted below
+        // ISSUE: If height isn't set, then popup menu height will expand when application buttons are added
+        let height = this.groupCategoriesWorkspacesScrollBox.height;
+        this.applicationsScrollBox.height = height;
+      });
     } else {
-      this.resetSearch();
-      this._clearCategorySelections(this.categoriesBox);
-      this._clearTabFocusSelections();
-      this._clearActiveContainerSelections();
-      this._clearApplicationsBox();
-      global.stage.set_key_focus(null);
+      Mainloop.idle_add(()=>{
+        this.resetSearch();
+        this._clearCategorySelections(this.categoriesBox);
+        this._clearTabFocusSelections();
+        this._clearActiveContainerSelections();
+        this._clearApplicationsBox();
+        global.stage.set_key_focus(null);
+      });
     }
     return true;
   },
@@ -233,28 +228,6 @@ CinnamenuPanel.prototype = {
 
   _clearAll: function() {
     this.menu.removeAll();
-  },
-
-  _setButtonHeight: function(button, height) {
-    let adjustedHeight = height;
-    let buttonBorder, buttonPadding;
-    if (button.get_stage()) {
-      let themeNode = button.get_theme_node();
-      buttonBorder = {
-        left: themeNode.get_border_width(St.Side.LEFT),
-        top: themeNode.get_border_width(St.Side.TOP),
-        bottom: themeNode.get_border_width(St.Side.BOTTOM),
-        right: themeNode.get_border_width(St.Side.RIGHT),
-      };
-      buttonPadding = {
-        left: themeNode.get_padding(St.Side.LEFT),
-        top: themeNode.get_padding(St.Side.TOP),
-        bottom: themeNode.get_padding(St.Side.BOTTOM),
-        right: themeNode.get_padding(St.Side.RIGHT),
-      };
-      adjustedHeight = height - (buttonBorder.top + buttonBorder.bottom + buttonPadding.top + buttonPadding.bottom);
-    }
-    button.height = adjustedHeight;
   },
 
   _loadCategories: function(dir, root) {
@@ -308,17 +281,27 @@ CinnamenuPanel.prototype = {
     this._currentCategoryButton = button;
   },
 
-  _selectFavorites: function(button) {
-    this.resetSearch();
-    this._clearApplicationsBox(button);
+  _selectFavorites: function(button, refresh) {
+    if (button._dir === 'favorites') {
+      this._selectCategory(this.favAppCategory);
+    }
 
-    let favorites = this.favorites;
+    this.resetSearch();
+    if (!refresh) {
+      this._clearApplicationsBox(button);
+    }
+    this.favorites = this._applet.appFavorites.getFavorites();
     this._displayApplications([{
-      apps: favorites,
+      apps: this.favorites,
       appType: ApplicationType._applications
-    }]);
-    this._currentSelectKey = '_selectFavorites';
-    this._currentCategoryButton = button;
+    }], button._dir === 'favorites');
+
+    if (!refresh) {
+      this._currentSelectKey = '_selectFavorites';
+      this._currentCategoryButton = button;
+    } else {
+      this[this._currentSelectKey](this._currentCategoryButton);
+    }
   },
 
   _selectAllPlaces: function(button) {
@@ -522,13 +505,13 @@ CinnamenuPanel.prototype = {
       for (let i = 0, len = categoryActors.length; i < len; i++) {
         let actor = categoryActors[i];
         if (selectedCategory && (actor == selectedCategory.actor)) {
-          actor.add_style_class_name('popup-sub-menu');
-          if (this._style1) {
+          //actor.add_style_class_name('popup-sub-menu');
+          /*if (this._style1) {
             actor.set_style(this._style1);
-          }
+          }*/
         } else {
-          actor.remove_style_class_name('popup-sub-menu');
-          actor.set_style('border-color: none');
+          /*actor.remove_style_class_name('popup-sub-menu');
+          actor.set_style('border-color: none');*/
         }
       }
     }
@@ -805,7 +788,7 @@ CinnamenuPanel.prototype = {
     }
 
     let topPaneWidth = viewModeBoxWrapperWidth + searchBoxWidth;
-    let minWidth = topPaneWidth - (this._widthCategoriesBox + this._widthShortcutsBox);
+    let minWidth = topPaneWidth - this._widthCategoriesBox;
 
     let gridBoxBorder = {
       left: 0,
@@ -972,7 +955,7 @@ CinnamenuPanel.prototype = {
 
     let appButtonEnterEvent = (appButton, appType)=>{
       appButton.actor.connect('enter-event', Lang.bind(this, function() {
-        if (this.menuIsOpen && this.menuIsopen !== appButton.appIndex) {
+        if (this.menuIsOpen && this.menuIsOpen !== appButton.appIndex) {
           return false;
         }
         appButton.actor.add_style_class_name('menu-application-button-selected');
@@ -1019,37 +1002,6 @@ CinnamenuPanel.prototype = {
       }));
     };
 
-    let appButtonButtonReleaseEvent = (appButton, appType, app)=>{
-      appButton.actor.connect('button-release-event', Lang.bind(this, function(actor, e) {
-        appButton.actor.remove_style_pseudo_class('pressed');
-        let button = e.get_button();
-        if (button === 1) {
-          if (this.menuIsOpen) {
-            if (this.menuIsopen !== appButton.appIndex) {
-              appButton.menu._activeMenuItem.activate();
-            }
-            return false;
-          }
-          this.selectedAppTitle.set_text('');
-          this.selectedAppDescription.set_text('');
-          if (appType === ApplicationType._applications) {
-            appButton.app.open_new_window(-1);
-          } else if (appType === ApplicationType._places) {
-            if (app.uri) {
-              appButton.app.app.launch_uris([app.uri], null);
-            } else {
-              appButton.app.launch();
-            }
-          } else if (appType === ApplicationType._recent) {
-            Gio.app_info_launch_default_for_uri(app.uri, global.create_app_launch_context(0, -1));
-          }
-          this.menu.close();
-        } else if (button === 3) {
-          appButton.toggleMenu(viewMode === ApplicationsViewMode.LIST);
-        }
-        return true;
-      }));
-    };
     if (!appList) {
       return
     }
@@ -1079,7 +1031,7 @@ CinnamenuPanel.prototype = {
             appButtonEnterEvent(appButton, appType);
             appButtonLeaveEvent(appButton)
             appButtonButtonPressEvent(appButton);
-            appButtonButtonReleaseEvent(appButton, appType, app);
+            //appButtonButtonReleaseEvent(appButton, appType, app);
             if (isListView) { // ListView
               this.applicationsListBox.add_actor(appButton.actor);
             } else { // GridView
@@ -1103,9 +1055,7 @@ CinnamenuPanel.prototype = {
 
   _scrollToActiveContainerButton: function(buttonActor) {
     let sBox;
-    if (this._activeContainer == this.shortcutsBox) {
-      sBox = this.shortcutsScrollBox;
-    } else if (this._activeContainer == this.applicationsListBox || this._activeContainer == this.applicationsGridBox) {
+    if (this._activeContainer == this.applicationsListBox || this._activeContainer == this.applicationsGridBox) {
       sBox = this.applicationsScrollBox;
     } else {
       return;
@@ -1154,13 +1104,6 @@ CinnamenuPanel.prototype = {
             this._activeContainer = this.categoriesBox;
           }
           break;
-        case this.shortcutsBox:
-          if (reverse) {
-            this._activeContainer = this.viewModeBox;
-          } else {
-            this._activeContainer = this.categoriesBox;
-          }
-          break;
         case this.categoriesBox:
           if (reverse) {
             this._activeContainer = this.viewModeBox;
@@ -1186,14 +1129,14 @@ CinnamenuPanel.prototype = {
           if (reverse) {
             this._activeContainer = (viewMode == ApplicationsViewMode.LIST) ? this.applicationsListBox : this.applicationsGridBox;
           } else {
-            this._activeContainer = this.shortcutsBox;
+            this._activeContainer = this.categoriesBox;
           }
           break;
         default:
           if (reverse) {
             this._activeContainer = this.powerGroupBox;
           } else {
-            this._activeContainer = this.shortcutsBox;
+            this._activeContainer = this.categoriesBox;
           }
       }
       this._clearTabFocusSelections(this._activeContainer, true);
@@ -1286,8 +1229,7 @@ CinnamenuPanel.prototype = {
         }
       }
     } else if (symbol && symbol == Clutter.KEY_Return || symbol == Clutter.KP_Enter) {
-      if (this._activeContainer == this.applicationsListBox || this._activeContainer == this.applicationsGridBox ||
-        this._activeContainer == this.shortcutsBox) {
+      if (this._activeContainer == this.applicationsListBox || this._activeContainer == this.applicationsGridBox) {
         // Launch application or Nautilus place or Recent document
         let item_actor = children[this._selectedItemIndex];
         if (item_actor._delegate._type == ApplicationType._applications) {
@@ -1353,7 +1295,7 @@ CinnamenuPanel.prototype = {
     this._clearActiveContainerSelections(itemActor);
 
     // Set selected app name/description
-    if (this._activeContainer == this.shortcutsBox || this._activeContainer == this.applicationsListBox || this._activeContainer ==
+    if (this._activeContainer == this.applicationsListBox || this._activeContainer ==
       this.applicationsGridBox) {
       if (itemActor._delegate._type == ApplicationType._applications) {
         this.selectedAppTitle.set_text(itemActor._delegate._app.get_name());
@@ -1539,7 +1481,7 @@ CinnamenuPanel.prototype = {
       style_class: ''
     });
 
-    // Middle pane holds shortcuts, categories/places/power, applications, workspaces (packed horizontally)
+    // Middle pane holds categories/places/power, applications, workspaces (packed horizontally)
     this.middlePane = new St.BoxLayout({
       style_class: ''
     });
@@ -1692,38 +1634,8 @@ CinnamenuPanel.prototype = {
     this.searchEntryText.connect('key-press-event', Lang.bind(this, this._onMenuKeyPress));
     this._previousSearchPattern = '';
 
-
-    // ShortcutsBox
-    this.shortcutsBox = new St.BoxLayout({
-      style_class: 'menu-places-box',
-      vertical: true
-    });
-    this.shortcutsScrollBox = new St.ScrollView({
-      x_fill: true,
-      y_fill: false,
-      y_align: St.Align.START,
-      style_class: 'vfade menu-applications-scrollbox'
-    });
-    let vscrollShortcuts = this.shortcutsScrollBox.get_vscroll_bar();
-    vscrollShortcuts.connect('scroll-start', Lang.bind(this, function() {
-      this.menu.passEvents = true;
-    }));
-    vscrollShortcuts.connect('scroll-stop', Lang.bind(this, function() {
-      this.menu.passEvents = false;
-    }));
-    this.shortcutsScrollBox.add_actor(this.shortcutsBox);
-    this.shortcutsScrollBox.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.NEVER);
-    this.shortcutsScrollBox.set_mouse_scrolling(true);
-
     //Load Favorites
-    this.favorites = [];
-    let launchers = global.settings.get_strv('favorite-apps');
-    for (let i = 0, len = launchers.length; i < len; i++) {
-      let app = this._applet.appSystem.lookup_app(launchers[i]);
-      if (app) {
-        this.favorites.push(app);
-      }
-    }
+    this.favorites = this._applet.appFavorites.getFavorites();
 
     // Load Places
     if (PlaceDisplay) {
@@ -2153,12 +2065,6 @@ CinnamenuPanel.prototype = {
       y_align: St.Align.START
     });
     this.middlePane.add(this.applicationsScrollBox, {
-      x_fill: false,
-      y_fill: false,
-      x_align: St.Align.START,
-      y_align: St.Align.START
-    });
-    this.middlePane.add(this.shortcutsScrollBox, {
       x_fill: false,
       y_fill: false,
       x_align: St.Align.START,
