@@ -9,6 +9,7 @@ const Params = imports.misc.params;
 const PopupMenu = imports.ui.popupMenu;
 const FileUtils = imports.misc.fileUtils;
 const Util = imports.misc.util;
+const Mainloop = imports.mainloop;
 //const DND = imports.ui.dnd;
 const AppletDir = imports.ui.appletManager.applets['Cinnamenu@json'];
 
@@ -73,14 +74,17 @@ function CategoryListButton() {
 CategoryListButton.prototype = {
   __proto__: PopupMenu.PopupBaseMenuItem.prototype,
 
-  _init: function(_parent, dir, altNameText, altIconName) {
+  _init: function(_parent, dir, altNameText, altIconName, selectorMethod) {
     PopupMenu.PopupBaseMenuItem.prototype._init.call(this, {
       hover: false
     });
-    this.buttonEnterCallback = null;
-    this.buttonLeaveCallback = null;
-    this.buttonPressCallback = null;
-    this.buttonReleaseCallback = null;
+
+    if (!selectorMethod) {
+      selectorMethod = '_selectCategory';
+    }
+    this.selectorMethod = selectorMethod;
+
+    this._parent = _parent;
     this._ignoreHoverSelect = null;
 
     this.actor.set_style_class_name('menu-category-button');
@@ -121,60 +125,52 @@ CategoryListButton.prototype = {
         icon_type: St.IconType.FULLCOLOR
       });
     }
+    this.categoryNameText = categoryNameText;
     this.addActor(this.icon);
     this.icon.realize();
     this.label = new St.Label({
-      text: categoryNameText,
+      text: this.categoryNameText,
       style_class: 'menu-category-button-label'
     });
     this.addActor(this.label);
     this.label.realize();
 
     // Connect signals
-    this.actor.connect('touch-event', Lang.bind(this, this._onTouchEvent));
+    this.actor.connect('enter-event', Lang.bind(this, this.handleEnter));
+    this.actor.connect('leave-event', Lang.bind(this, this.handleLeave));
+    this.actor.connect('button-release-event', Lang.bind(this, this.handleButtonRelease));
   },
 
-  setButtonEnterCallback: function(cb) {
-    this.buttonEnterCallback = cb;
-    this.actor.connect('enter-event', Lang.bind(this, this.buttonEnterCallback));
+  handleEnter: function() {
+    this.actor.add_style_class_name('menu-category-button-selected');
+    this._parent.selectedAppTitle.set_text(this.categoryNameText);
+    this._parent.selectedAppDescription.set_text('');
+
+    if (this._ignoreHoverSelect) {
+      return false;
+    }
+
+    Mainloop.idle_add_full(Mainloop.PRIORITY_DEFAULT, Lang.bind(this, function() {
+      this._parent[this.selectorMethod](this, null);
+    }));
+    return true;
   },
 
-  setButtonLeaveCallback: function(cb) {
-    this.buttonLeaveCallback = cb;
-    this.actor.connect('leave-event', Lang.bind(this, this.buttonLeaveCallback));
+  handleLeave: function() {
+    this.actor.remove_style_class_name('menu-category-button-selected');
+    this._parent.selectedAppTitle.set_text('');
+    this._parent.selectedAppDescription.set_text('');
   },
 
-  setButtonPressCallback: function(cb) {
-    this.buttonPressCallback = cb;
-    this.actor.connect('button-press-event', Lang.bind(this, this.buttonPressCallback));
-  },
-
-  setButtonReleaseCallback: function(cb) {
-    this.buttonReleaseCallback = cb;
-    this.actor.connect('button-release-event', Lang.bind(this, this.buttonReleaseCallback));
-  },
-
-  select: function() {
-    this._ignoreHoverSelect = true;
-    this.buttonEnterCallback.call();
-  },
-
-  unSelect: function() {
-    this._ignoreHoverSelect = false;
-    this.buttonLeaveCallback.call();
-  },
-
-  click: function() {
-    this.buttonPressCallback.call();
-    this.buttonReleaseCallback.call();
-  },
-
-  _onTouchEvent: function(actor, event) {
-    return Clutter.EVENT_PROPAGATE;
+  handleButtonRelease: function() {
+    this._parent.selectedAppTitle.set_text(this.categoryNameText);
+    this._parent.selectedAppDescription.set_text('');
+    this._parent._selectCategory(this);
   },
 
   destroy: function(actor) {
     this._parent = null;
+    this.actor._delegate = null;
     this.label.destroy();
     if (this.icon) {
       this.icon.destroy();
@@ -287,7 +283,6 @@ AppListGridButton.prototype = {
     });
 
     this._parent = _parent;
-    this._applet = _parent._applet;
 
     this.menu = new PopupMenu.PopupSubMenu(this.actor);
     this.menu.actor.set_style_class_name('menu-context-menu');
@@ -306,19 +301,19 @@ AppListGridButton.prototype = {
     this.appIndex = appIndex;
 
     if (isGridType) {
-      style = 'popup-menu-item cinnamenu-application-grid-button col'+this._applet.appsGridColumnCount.toString();
+      style = 'popup-menu-item cinnamenu-application-grid-button col'+this._parent._applet.appsGridColumnCount.toString();
 
-      if (this._applet.appsGridIconScale) {
-        let size = Math.round(Math.abs((Math.round(appListLength / this._applet.appsGridColumnCount)) - 2048) / appListLength);
+      if (this._parent._applet.appsGridIconScale) {
+        let size = Math.round(Math.abs((Math.round(appListLength / this._parent._applet.appsGridColumnCount)) - 2048) / appListLength);
         size = isNaN(size) || size < 48 ? 48 : size > 102 ? 102 : size;
         this._iconSize = size
       } else {
-        this._iconSize = this._applet.appsGridIconSize > 0 ? this._applet.appsGridIconSize : 64;
+        this._iconSize = this._parent._applet.appsGridIconSize > 0 ? this._parent._applet.appsGridIconSize : 64;
       }
 
     } else {
       style = 'menu-application-button';
-      this._iconSize = (this._applet.appsListIconSize > 0) ? this._applet.appsListIconSize : 28;
+      this._iconSize = (this._parent._applet.appsListIconSize > 0) ? this._parent._applet.appsListIconSize : 28;
       this._iconContainer = new St.BoxLayout({
         vertical: true
       });
@@ -332,7 +327,7 @@ AppListGridButton.prototype = {
     if (appType == ApplicationType._applications) {
       this.icon = app.create_icon_texture(this._iconSize);
       this.label = new St.Label({
-        text: app.get_name(),
+        text: app.name,
         style_class: 'menu-application-button-label'
       });
     } else if (appType == ApplicationType._places) {
@@ -370,7 +365,7 @@ AppListGridButton.prototype = {
       });
     }
 
-    this._dot = new St.Widget({
+    this.dot = new St.Widget({
       style: 'width: 5px; height: 5px; background-color: ' + this._parent.theme.mainBoxBorderColor + '; margin-bottom: 2px; border-radius: 128px;',
       layout_manager: new Clutter.BinLayout(),
       x_expand: true,
@@ -390,7 +385,6 @@ AppListGridButton.prototype = {
       x_align: isGridType ? St.Align.MIDDLE : St.Align.END,
       y_align: isGridType ? St.Align.START : St.Align.END
     });
-    this.icon.realize();
     if (!isGridType) {
       this.buttonBox.add(this._iconContainer, {
         x_fill: false,
@@ -405,7 +399,7 @@ AppListGridButton.prototype = {
       x_align: isGridType ? St.Align.MIDDLE : St.Align.START,
       y_align: isGridType ? St.Align.MIDDLE : St.Align.MIDDLE
     });
-    this[iconDotContainer].add(this._dot, {
+    this[iconDotContainer].add(this.dot, {
       x_fill: false,
       y_fill: false,
       x_align: isGridType ? St.Align.MIDDLE : St.Align.END,
@@ -414,6 +408,8 @@ AppListGridButton.prototype = {
 
     this.buttonBox.add_actor(this.menu.actor);
     this.addActor(this.buttonBox);
+    this.icon.realize();
+    this.label.realize();
 
     // Connect signals
     if (appType == ApplicationType._applications) {
@@ -421,8 +417,55 @@ AppListGridButton.prototype = {
     }
 
     // Check if running state
-    this._dot.opacity = 0;
+    this.dot.opacity = 0;
     this._onStateChanged();
+
+    this.actor.connect('enter-event', Lang.bind(this, this.handleEnter));
+    this.actor.connect('leave-event', Lang.bind(this, this.handleLeave));
+    this.actor.connect('button-press-event', Lang.bind(this, this.handleButtonPress));
+  },
+
+  handleEnter: function(actor, e) {
+    if (this._parent.menuIsOpen && this._parent.menuIsOpen !== this.appIndex) {
+      return false;
+    }
+    this.actor.add_style_class_name('menu-application-button-selected');
+    if (this.appType === ApplicationType._applications) {
+      this._parent.selectedAppTitle.set_text(this.app.get_name());
+      if (this.app.get_description()) {
+        this._parent.selectedAppDescription.set_text(this.app.get_description());
+      } else {
+        this._parent.selectedAppDescription.set_text('');
+      }
+    } else {
+      // Until we figure out how to prevent the menu width from expanding when long titles are displayed,
+      // we will truncate the text.
+      let nameLength = this.app.name.length;
+      let truncLimit = this.isGridType ? 45 : 30;
+      let trailingTrunc = nameLength > 70 ? '...' : '';
+      let name = this.app.name.substring(0, truncLimit) + trailingTrunc;
+      this._parent.selectedAppTitle.set_text(name);
+      if (this.app.description) {
+        this._parent.selectedAppDescription.set_text(this.app.description);
+      } else {
+        if (this.app.hasOwnProperty('uri')) {
+          this._parent.selectedAppDescription.set_text(this.app.uri);
+        } else {
+          this._parent.selectedAppDescription.set_text('');
+        }
+      }
+    }
+    return true;
+  },
+
+  handleLeave: function() {
+    this.actor.remove_style_class_name('menu-application-button-selected');
+    this._parent.selectedAppTitle.set_text('');
+    this._parent.selectedAppDescription.set_text('');
+  },
+
+  handleButtonPress: function() {
+    this.actor.add_style_pseudo_class('pressed');
   },
 
   highlight: function () { // TBD
@@ -465,7 +508,7 @@ AppListGridButton.prototype = {
       this.app.open_new_window(-1);
     } else if (this.appType === ApplicationType._places) {
       if (this.app.uri) {
-        this.app.app.launch_uris([app.uri], null);
+        this.app.app.launch_uris([this.app.uri], null);
       } else {
         this.app.launch();
       }
@@ -491,7 +534,7 @@ AppListGridButton.prototype = {
     this.column = column;
     if (column === 0 || column === this.appListLength) {
       this.menu.actor.set_position(-90, 50);
-    } else if (column === this._applet.appsGridColumnCount) {
+    } else if (column === this._parent._applet.appsGridColumnCount) {
       this.menu.actor.set_position(160, 50);
     } else {
       this.menu.actor.set_position(0, 50);
@@ -501,9 +544,9 @@ AppListGridButton.prototype = {
   _onStateChanged: function() {
     if (this.appType == ApplicationType._applications) {
       if (this.app.state != Cinnamon.AppState.STOPPED) {
-        this._dot.opacity = 255;
+        this.dot.opacity = 255;
       } else {
-        this._dot.opacity = 0;
+        this.dot.opacity = 0;
       }
     }
   },
@@ -588,7 +631,6 @@ AppListGridButton.prototype = {
     PopupMenu.PopupBaseMenuItem.prototype.destroy.call(this);
   }
 };
-//Signals.addSignalMethods(AppListGridButton.prototype);
 
 /* =========================================================================
 /* name:    GroupButton
