@@ -431,9 +431,9 @@ AppListGridButton.prototype = {
     }
     this.actor.add_style_class_name('menu-application-button-selected');
     if (this.appType === ApplicationType._applications) {
-      this._parent.selectedAppTitle.set_text(this.app.get_name());
-      if (this.app.get_description()) {
-        this._parent.selectedAppDescription.set_text(this.app.get_description());
+      this._parent.selectedAppTitle.set_text(this.app.name);
+      if (this.app.description) {
+        this._parent.selectedAppDescription.set_text(this.app.description);
       } else {
         this._parent.selectedAppDescription.set_text('');
       }
@@ -622,7 +622,7 @@ AppListGridButton.prototype = {
       // Allow other buttons hover functions to take effect.
       this._parent.menuIsOpen = null;
     }
-    this.menu.toggle_with_options(this._parent.enableAnimations);
+    this.menu.toggle_with_options(this._parent._applet.enableAnimations);
     return true
   },
 
@@ -685,7 +685,7 @@ GroupButton.prototype = {
     }
 
     // Connect signals
-    this.actor.connect('touch-event', Lang.bind(this, this._onTouchEvent));
+    //this.actor.connect('touch-event', Lang.bind(this, this._onTouchEvent));
   },
 
   setIcon: function(iconName) {
@@ -733,9 +733,9 @@ GroupButton.prototype = {
     this.buttonReleaseCallback.call();
   },
 
-  _onTouchEvent: function(actor, event) {
+  /*_onTouchEvent: function(actor, event) {
     return Clutter.EVENT_PROPAGATE;
-  },
+  },*/
 
   _onButtonReleaseEvent: function(actor) {
     return false;

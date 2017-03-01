@@ -14,7 +14,6 @@ const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 
 const AppletDir = imports.ui.appletManager.applets['Cinnamenu@json'];
-const kmp = AppletDir.kmp.kmp;
 
 const Chromium = AppletDir.webChromium;
 const Firefox = AppletDir.webFirefox;
@@ -26,6 +25,7 @@ const SearchWebBookmarks = AppletDir.buttons.SearchWebBookmarks;
 const CategoryListButton = AppletDir.buttons.CategoryListButton;
 const AppListGridButton = AppletDir.buttons.AppListGridButton;
 const GroupButton = AppletDir.buttons.GroupButton;
+const Fuse = AppletDir.fuse.Fuse;
 
 const Gettext = imports.gettext.domain('Cinnamenu@json');
 const _ = Gettext.gettext;
@@ -239,12 +239,14 @@ CinnamenuPanel.prototype = {
         if (!entry.get_app_info().get_nodisplay()) {
           var app = this._applet.appSystem.lookup_app(entry.get_desktop_file_id());
           if (rootDir) {
-            if (rootDir.get_menu_id()) {
-              this.applicationsByCategory[rootDir.get_menu_id()].push(app);
+            let rootDirId = rootDir.get_menu_id();
+            if (rootDirId) {
+              this.applicationsByCategory[rootDirId].push(app);
             }
           } else {
-            if (dir.get_menu_id()) {
-              this.applicationsByCategory[dir.get_menu_id()].push(app);
+            let dirMenuId = dir.get_menu_id();
+            if (dirMenuId) {
+              this.applicationsByCategory[dirMenuId].push(app);
             }
           }
         }
@@ -265,15 +267,9 @@ CinnamenuPanel.prototype = {
 
     let category = button._dir;
     if (typeof category == 'string') {
-      this._displayApplications([{
-        apps: this._listApplications(category),
-        appType: ApplicationType._applications
-      }], refresh);
+      this._displayApplications(this._listApplications(category), refresh);
     } else {
-      this._displayApplications([{
-        apps: this._listApplications(category.get_menu_id()),
-        appType: ApplicationType._applications
-      }], refresh);
+      this._displayApplications(this._listApplications(category.get_menu_id()), refresh);
     }
 
     // Cache the current category button so we can invoke this function to get around the list/grid toggle
@@ -293,10 +289,10 @@ CinnamenuPanel.prototype = {
       this._clearApplicationsBox(button);
     }
     this.favorites = this._applet.appFavorites.getFavorites();
-    this._displayApplications([{
-      apps: this.favorites,
-      appType: ApplicationType._applications
-    }], button._dir === 'favorites');
+    for (var i = 0; i < this.favorites.length; i++) {
+      this.favorites[i].type = ApplicationType._applications;
+    }
+    this._displayApplications(this.favorites, button._dir === 'favorites');
 
     if (!refresh) {
       this._currentSelectKey = '_selectFavorites';
@@ -315,10 +311,7 @@ CinnamenuPanel.prototype = {
     let devices = this._listDevices();
 
     let allPlaces = places.concat(bookmarks.concat(devices));
-    this._displayApplications([{
-      apps: allPlaces,
-      appType: ApplicationType._places
-    }]);
+    this._displayApplications(allPlaces);
     this._currentSelectKey = '_selectAllPlaces';
     this._currentCategoryButton = button;
   },
@@ -328,10 +321,7 @@ CinnamenuPanel.prototype = {
     this._clearApplicationsBox(button);
 
     let bookmarks = this._listBookmarks();
-    this._displayApplications([{
-      apps: bookmarks,
-      appType: ApplicationType._places
-    }]);
+    this._displayApplications(bookmarks);
     this._currentSelectKey = '_selectBookmarks';
     this._currentCategoryButton = button;
   },
@@ -341,10 +331,7 @@ CinnamenuPanel.prototype = {
     this._clearApplicationsBox(button);
 
     let devices = this._listDevices();
-    this._displayApplications([{
-      apps: devices,
-      appType: ApplicationType._places
-    }]);
+    this._displayApplications(devices);
     this._currentSelectKey = '_selectDevices';
     this._currentCategoryButton = button;
   },
@@ -354,10 +341,7 @@ CinnamenuPanel.prototype = {
     this._clearApplicationsBox(button);
 
     let recent = this._listRecent();
-    this._displayApplications([{
-      apps: recent,
-      appType: ApplicationType._recent
-    }]);
+    this._displayApplications(recent);
     this._currentSelectKey = '_selectRecent';
     this._currentCategoryButton = button;
   },
@@ -367,10 +351,7 @@ CinnamenuPanel.prototype = {
     this._clearApplicationsBox(button);
 
     let webBookmarks = this._listWebBookmarks();
-    this._displayApplications([{
-      apps: webBookmarks,
-      appType: ApplicationType._places
-    }]);
+    this._displayApplications(webBookmarks);
     this._currentSelectKey = '_selectWebBookmarks';
     this._currentCategoryButton = button;
   },
@@ -510,6 +491,7 @@ CinnamenuPanel.prototype = {
     let res = [];
     for (let i = 0, len = places.length; i < len; i++) {
       if (!pattern || places[i].name.toLowerCase().indexOf(pattern) !== -1) {
+        places[i].type = ApplicationType._places;
         res.push(places[i]);
       }
     }
@@ -524,6 +506,7 @@ CinnamenuPanel.prototype = {
     let res = [];
     for (let i = 0, len = bookmarks.length; i < len; i++) {
       if (!pattern || bookmarks[i].name.toLowerCase().indexOf(pattern) !== -1) {
+        bookmarks[i].type = ApplicationType._places;
         res.push(bookmarks[i]);
       }
     }
@@ -561,15 +544,14 @@ CinnamenuPanel.prototype = {
     bookmarks = bookmarks.concat(Opera.bookmarks);
 
     for (let i = 0, len = bookmarks.length; i < len; i++) {
-      if (!pattern || bookmarks[i].name.toLowerCase().indexOf(pattern) != -1) {
-        res.push({
-          app: bookmarks[i].appInfo,
-          name: bookmarks[i].name,
-          icon: bookmarks[i].appInfo.get_icon(),
-          mime: null,
-          uri: bookmarks[i].uri
-        });
-      }
+      res.push({
+        app: bookmarks[i].appInfo,
+        name: bookmarks[i].name,
+        icon: bookmarks[i].appInfo.get_icon(),
+        mime: null,
+        uri: bookmarks[i].uri,
+        type: ApplicationType._places
+      });
     }
 
     // Create a unique list of bookmarks across all browsers.
@@ -584,6 +566,22 @@ CinnamenuPanel.prototype = {
       res.push(arr[key]);
     }
 
+    if (pattern) {
+      let query = new Fuse(res, {
+        keys: [{
+          name: 'app',
+          weight: 0.6
+        }, {
+          name: 'uri',
+          weight: 0.4
+        }],
+        thresholod: 0.4,
+        include: ['score']
+      });
+
+      res = query.search(pattern);
+    }
+
     return res;
   },
 
@@ -595,6 +593,7 @@ CinnamenuPanel.prototype = {
     let res = [];
     for (let i = 0, len = devices.length; i < len; i++) {
       if (!pattern || devices[i].name.toLowerCase().indexOf(pattern) !== -1) {
+        devices[i].type = ApplicationType._places;
         res.push(devices[i]);
       }
     }
@@ -612,15 +611,30 @@ CinnamenuPanel.prototype = {
     for (let i = 0, len = recentFiles.length; i < len; i++) {
       let recentInfo = recentFiles[i];
       if (recentInfo.exists()) {
-        if (!pattern || recentInfo.get_display_name().toLowerCase().indexOf(pattern) !== -1) {
-          res.push({
-            name: recentInfo.get_display_name(),
-            icon: recentInfo.get_gicon(),
-            mime: recentInfo.get_mime_type(),
-            uri: recentInfo.get_uri()
-          });
-        }
+        res.push({
+          name: recentInfo.get_display_name(),
+          icon: recentInfo.get_gicon(),
+          mime: recentInfo.get_mime_type(),
+          uri: recentInfo.get_uri(),
+          type: ApplicationType._recent
+        });
       }
+    }
+
+    if (pattern) {
+      let query = new Fuse(res, {
+        keys: [{
+          name: 'name',
+          weight: 0.6
+        }, {
+          name: 'uri',
+          weight: 0.4
+        }],
+        thresholod: 0.4,
+        include: ['score']
+      });
+
+      res = query.search(pattern);
     }
     return res;
   },
@@ -645,27 +659,36 @@ CinnamenuPanel.prototype = {
     }
 
     let res = [];
+    let searchApps = [];
     if (pattern) {
       for (let i = 0, len = appList.length; i < len; i++) {
         let app = appList[i];
-        let appName = app.get_name();
-        let appKeywords = app.get_keywords();
-        let appDescription = app.get_description();
-        let appId = app.get_id();
+        app.name = app.get_name();
+        app.keywords = app.get_keywords();
+        app.description = app.get_description();
+        app.id = app.get_id();
+        app.type = ApplicationType._applications;
 
-        if (kmp(Util.latinise(appName), pattern) !== -1) {
-          res.push(app);
-        }
-        if (appKeywords && res.indexOf(app) === -1 && kmp(Util.latinise(appKeywords.toLowerCase()), pattern) !== -1) {
-          res.push(app);
-        }
-        if (appDescription && res.indexOf(app) === -1 && kmp(Util.latinise(appDescription.toLowerCase()), pattern) !== -1) {
-          res.push(app);
-        }
-        if (appId && res.indexOf(app) === -1 && kmp(Util.latinise(app.get_id().slice(0, -8).toLowerCase()), pattern) !== -1) {
-          res.push(app);
-        }
+        searchApps.push(app);
       }
+      let query = new Fuse(searchApps, {
+        keys: [{
+          name: 'name',
+          weight: 0.4
+        }, {
+          name: 'keywords',
+          weight: 0.3
+        }, {
+          name: 'description',
+          weight: 0.2
+        }, {
+          name: 'id',
+          weight: 0.1
+        }],
+        thresholod: 0.2,
+        include: ['score']
+      });
+      res = query.search(pattern);
     } else {
       res = appList;
     }
@@ -678,8 +701,12 @@ CinnamenuPanel.prototype = {
     }
 
     for (let i = 0, len = res.length; i < len; i++) {
-      if (!res[i].hasOwnProperty('name')) {
-        res[i].name = res[i].get_name();
+      let obj = res[i].hasOwnProperty('item') ? res[i].item : res[i];
+      if (!obj.hasOwnProperty('name')) {
+        obj.name = obj.get_name();
+      }
+      if (!obj.hasOwnProperty('description')) {
+        obj.description = obj.get_description();
       }
     }
 
@@ -936,6 +963,16 @@ CinnamenuPanel.prototype = {
     return 0;
   },
 
+  sortAppsByScore: function(a, b) {
+    if (a.score < b.score) {
+      return -1;
+    }
+    if (a.score > b.score) {
+      return 1;
+    }
+    return 0;
+  },
+
   _displayApplications: function(appList, refresh, isSearch) {
     let viewMode = this._applicationsViewMode;
 
@@ -977,36 +1014,41 @@ CinnamenuPanel.prototype = {
       }
     };
 
-    for (let z = 0, len = appList.length; z < len; z++) {
-      let apps = appList[z].apps;
+    if (!isSearch) {
+      appList = appList.sort(this.sortAppsByName);
+    }
 
-      if (!isSearch) {
-        apps = apps.sort(this.sortAppsByName);
+    for (let z = 0, len = appList.length; z < len; z++) {
+      if (appList[z] === undefined) {
+        continue;
       }
 
-      let appType = appList[z].appType;
+      let appType = appList[z].type;
+      if (appType === undefined) {
+        appType = ApplicationType._applications;
+      }
+
       for (let appTypeKey in ApplicationType) {
         if (ApplicationType[appTypeKey] !== appType) {
           continue;
         }
         if (refresh) {
-          apps = this[appTypeKey];
+          appList = this[appTypeKey];
         } else {
           this[appTypeKey] = [];
         }
-        for (let i = 0, len = apps.length; i < len; i++) {
-          ++appIndex;
-          let app = apps[i];
-          if (refresh || !this._applications[app]) {
-            createAppButton(app, appType, len);
-          }
-          if (!refresh) {
-            this[appTypeKey][app] = app;
-          }
+
+        ++appIndex;
+
+        let app = appList[z];
+        if (refresh || !this._applications[app]) {
+          createAppButton(app, appType, len);
+        }
+        if (!refresh) {
+          this[appTypeKey][app] = app;
         }
       }
     }
-    return true;
   },
 
   _scrollToActiveContainerButton: function(buttonActor) {
@@ -1384,22 +1426,20 @@ CinnamenuPanel.prototype = {
 
     let recentResults = this._listRecent(pattern);
 
+    let results = appResults.concat(placesResults).concat(recentResults);
+
+    results = results.sort(this.sortAppsByScore);
+
+    results = results.map((result)=>{
+      if (result.hasOwnProperty('item')) {
+        return result.item
+      } else {
+        return result
+      }
+    });
 
     this._clearApplicationsBox();
-    this._displayApplications([
-      {
-        apps: appResults,
-        appType: ApplicationType._applications
-      },
-      {
-        apps: placesResults,
-        appType: ApplicationType._places
-      },
-      {
-        apps: recentResults,
-        appType: ApplicationType._recent
-      },
-    ], null, true);
+    this._displayApplications(results, null, true);
 
     this._activeContainer = (this._applicationsViewMode == ApplicationsViewMode.LIST) ? this.applicationsListBox : this.applicationsGridBox;
     this.selectActiveContainerItem(null, null, true);
@@ -1517,8 +1557,13 @@ CinnamenuPanel.prototype = {
     this.toggleListGridView = new GroupButton(this, viewModeButtonIcon, viewModeButtonIconSize, null, null);
     this.toggleListGridView.setButtonEnterCallback(Lang.bind(this, function() {
       this.toggleListGridView.actor.add_style_pseudo_class('hover');
-      this.selectedAppTitle.set_text(_('List View'));
-      this.selectedAppDescription.set_text('');
+      if (this._applicationsViewMode === ApplicationsViewMode.LIST) {
+        this.selectedAppTitle.set_text(_('Grid View'));
+        this.selectedAppDescription.set_text('Switch to grid view');
+      } else {
+        this.selectedAppTitle.set_text(_('List View'));
+        this.selectedAppDescription.set_text('Switch to list view');
+      }
     }));
     this.toggleListGridView.setButtonLeaveCallback(Lang.bind(this, function() {
       this.toggleListGridView.actor.remove_style_pseudo_class('hover');
@@ -1704,7 +1749,7 @@ CinnamenuPanel.prototype = {
     lockScreen.setButtonEnterCallback(Lang.bind(this, function() {
       lockScreen.actor.add_style_class_name('selected');
       this.selectedAppTitle.set_text(_('Lock Screen'));
-      this.selectedAppDescription.set_text('');
+      this.selectedAppDescription.set_text(_('Lock the screen'));
     }));
     lockScreen.setButtonLeaveCallback(Lang.bind(this, function() {
       lockScreen.actor.remove_style_class_name('selected');
@@ -1734,8 +1779,8 @@ CinnamenuPanel.prototype = {
     let logoutUser = new GroupButton(this, 'application-exit', 16, null, null);
     logoutUser.setButtonEnterCallback(Lang.bind(this, function() {
       logoutUser.actor.add_style_class_name('selected');
-      this.selectedAppTitle.set_text(_('Logout User'));
-      this.selectedAppDescription.set_text('');
+      this.selectedAppTitle.set_text(_('Logout'));
+      this.selectedAppDescription.set_text('Leave the session');
     }));
     logoutUser.setButtonLeaveCallback(Lang.bind(this, function() {
       logoutUser.actor.remove_style_class_name('selected');
@@ -1757,8 +1802,8 @@ CinnamenuPanel.prototype = {
     let systemShutdown = new GroupButton(this, 'system-shutdown', 16, null, null);
     systemShutdown.setButtonEnterCallback(Lang.bind(this, function() {
       systemShutdown.actor.add_style_class_name('selected');
-      this.selectedAppTitle.set_text(_('Shutdown'));
-      this.selectedAppDescription.set_text('');
+      this.selectedAppTitle.set_text(_('Quit'));
+      this.selectedAppDescription.set_text('Shutdown the computer');
     }));
     systemShutdown.setButtonLeaveCallback(Lang.bind(this, function() {
       systemShutdown.actor.remove_style_class_name('selected');
