@@ -542,6 +542,9 @@ AppListGridButton.prototype = {
   },
 
   _onStateChanged: function() {
+    if (!this.app) {
+      return false;
+    }
     if (this.appType == ApplicationType._applications) {
       if (this.app.state != Cinnamon.AppState.STOPPED) {
         this.dot.opacity = 255;
@@ -549,6 +552,7 @@ AppListGridButton.prototype = {
         this.dot.opacity = 0;
       }
     }
+    return true;
   },
 
   getDragActor: function() {
@@ -581,7 +585,8 @@ AppListGridButton.prototype = {
 
     if (!this.menu.isOpen) {
       let children = this.menu.box.get_children();
-      for (var i in children) {
+      for (var i = 0; i < children.length; i++) {
+        children[i].destroy();
         this.menu.box.remove_actor(children[i]);
       }
       this._parent.menuIsOpen = this.appIndex;
@@ -627,7 +632,23 @@ AppListGridButton.prototype = {
   },
 
   destroy: function() {
-    this.buttonBox.destroy_all_children();
+    this._parent = null;
+    this.app = null;
+    let children = this.menu.box.get_children();
+    for (var i = 0; i < children.length; i++) {
+      this.menu.box.remove_actor(children[i]);
+      children[i].destroy();
+    }
+    this.menu.destroy();
+    this.dot.destroy();
+    this.label.unrealize();
+    this.icon.unrealize();
+    this.label.destroy();
+    this.icon.destroy();
+    if (this._iconContainer) {
+      this._iconContainer.destroy();
+    }
+    this.buttonBox.destroy();
     PopupMenu.PopupBaseMenuItem.prototype.destroy.call(this);
   }
 };
@@ -742,7 +763,7 @@ GroupButton.prototype = {
   },
 
   destroy: function(actor) {
-    this._parent = null;
+    this._applet = null;
     this.label.destroy();
     if (this.icon) {
       this.icon.destroy();

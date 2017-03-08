@@ -122,13 +122,7 @@ CinnamenuPanel.prototype = {
     this._screenSaverProxy = new ScreenSaver.ScreenSaverProxy();
     this.recentManager = Gtk.RecentManager.get_default();
     this.placesManager = null;
-    this._display();
-  },
-
-  destroy: function() {
-    global.settings.disconnect(this.panelEditId)
-    PanelMenu.Button.prototype.destroy.call(this)
-    this._searchWebBookmarks.destroy();
+    this._displayed = false;
   },
 
   on_panel_edit_mode_changed: function() {
@@ -159,6 +153,9 @@ CinnamenuPanel.prototype = {
       this._applet.actor.handler_block(this._applet._appletEnterEventId);
     }
     if (open) {
+      if (!this._displayed) {
+        this._display();
+      }
       this.introspectTheme(()=>{
         // Set focus to search entry
         global.stage.set_key_focus(this.searchEntry);
@@ -216,12 +213,19 @@ CinnamenuPanel.prototype = {
       this._clearActiveContainerSelections();
       this._clearApplicationsBox();
       global.stage.set_key_focus(null);
+      this.destroyAppButtons();
+      this._clearAll();
+      this.destroyDisplayed();
+      this._displayed = false;
     }
     return true;
   },
 
   refresh: function() {
+    this.destroyAppButtons();
     this._clearAll();
+    this.destroyDisplayed();
+    this._displayed = false;
     this._display();
   },
 
@@ -983,6 +987,8 @@ CinnamenuPanel.prototype = {
 
     for (let i = 0, len = this.appButtons.length; i < len; i++) {
       this.appButtons[i].closeMenu();
+      this.appButtons[i].destroy();
+      this.appButtons[i] = null;
     }
 
     this.appButtons = [];
@@ -1448,6 +1454,7 @@ CinnamenuPanel.prototype = {
   },
 
   _display: function() {
+    this._displayed = true;
     let recentEnabled = this._applet.privacy_settings.get_boolean(REMEMBER_RECENT_KEY);
 
     // popupMenuSection holds the mainbox
@@ -1974,14 +1981,57 @@ CinnamenuPanel.prototype = {
       source: this.groupCategoriesWorkspacesScrollBox,
       coordinate: Clutter.BindCoordinate.HEIGHT,
       offset: 0
-    }));
-    this.shortcutsScrollBox.add_constraint(new Clutter.BindConstraint({
-      name: 'shortcutsScrollBoxConstraint',
-      source: this.groupCategoriesWorkspacesScrollBox,
-      coordinate: Clutter.BindCoordinate.HEIGHT,
-      offset: 0
     }));*/
 
     this._widthCategoriesBox = this.categoriesBox.width;
-  }
+  },
+
+  destroyContainer: function(container) {
+    if (!container && container === undefined) {
+      return false;
+    }
+    let children = container.get_children();
+    for (let i = 0, len = children.length; i < len; i++) {
+      children[i].destroy();
+    }
+    container.destroy();
+    return true;
+  },
+
+  destroy: function() {
+    this._applet = null;
+    global.settings.disconnect(this.panelEditId);
+    this.destroyAppButtons();
+    this.destroyDisplayed();
+    PanelMenu.Button.prototype.destroy.call(this)
+    this._searchWebBookmarks.destroy();
+  },
+
+  destroyDisplayed: function() {
+    this.destroyContainer(this.searchBox);
+    this.destroyContainer(this.viewModeBox);
+    this.destroyContainer(this.viewModeWrapper);
+    this.destroyContainer(this.categoriesBox);
+    this.destroyContainer(this.powerGroupBox);
+    this.destroyContainer(this.viewModeBox);
+    this.destroyContainer(this.applicationsGridBox);
+    this.destroyContainer(this.applicationsListBox);
+    this.destroyContainer(this.applicationsBoxWrapper);
+    this.destroyContainer(this.applicationsScrollBox);
+    this.destroyContainer(this.topPane);
+    this.destroyContainer(this.groupCategoriesWorkspacesScrollBox);
+    this.destroyContainer(this.middlePane);
+    this.destroyContainer(this.bottomPane);
+    this.destroyContainer(this.mainBox);
+  },
+
+  destroyAppButtons: function() {
+    for (let i = 0, len = this.appButtons.length; i < len; i++) {
+      this.appButtons[i].closeMenu();
+      this.appButtons[i].destroy();
+      this.appButtons[i] = null;
+    }
+
+    this.appButtons = [];
+  },
 };
