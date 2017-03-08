@@ -1,6 +1,6 @@
 {
   "name": "Cinnamenu",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Cinnamenu",
   "main": "gulpfile.js",
   "scripts": {
@@ -35,7 +35,5 @@
     "gulp-babel": "^6.1.2",
     "gulp-zip": "^3.2.0"
   },
-  "dependencies": {
-    "lodash": "^4.16.6"
-  }
+  "dependencies": {}
 }
