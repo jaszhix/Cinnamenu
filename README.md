@@ -13,6 +13,6 @@ Cinnamenu is a full featured menu extension for Cinnamon. It is a fork and port 
  * Search through apps, files, bookmarks, and places simultaneously.
  * Indicators for running apps.
 
- ### Dependencies
+### Dependencies
 
  * In order for Firefox bookmarks to work, you need to install ```gir1.2-gda-5.0```.
