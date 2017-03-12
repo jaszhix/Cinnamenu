@@ -321,6 +321,15 @@ CinnamenuButton.prototype = {
         cb: null
       },
       {
+        key: 'enable-bookmarks',
+        value: 'enableBookmarks',
+        cb: Lang.bind(this, function() {
+          if (this.cinnamenuPanel) {
+            this.cinnamenuPanel.refresh();
+          }
+        })
+      },
+      {
         key: 'menu-label',
         value: 'menuLabel',
         cb: this._updateIconAndLabel

@@ -1744,8 +1744,10 @@ CinnamenuPanel.prototype = {
     }
 
     // Load 'bookmarks' category
-    this.webBookmarksCategory = new CategoryListButton(this, 'bookmarks', _('Bookmarks'), 'emblem-favorite', '_selectWebBookmarks');
-    this.categoriesBox.add_actor(this.webBookmarksCategory.actor);
+    if (this._applet.enableBookmarks) {
+      this.webBookmarksCategory = new CategoryListButton(this, 'bookmarks', _('Bookmarks'), 'emblem-favorite', '_selectWebBookmarks');
+      this.categoriesBox.add_actor(this.webBookmarksCategory.actor);
+    }
 
     // PowerGroupBox
     this.powerGroupBox = new St.BoxLayout({
