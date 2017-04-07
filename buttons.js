@@ -178,6 +178,10 @@ CategoryListButton.prototype = {
   },
 
   disable: function() {
+    if (this.actor.has_style_class_name('menu-category-button-greyed')) {
+      return false;
+    }
+
     this.actor.set_style_class_name('menu-category-button-greyed');
     this.disabled = true;
   },
