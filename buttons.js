@@ -109,7 +109,7 @@ CategoryListButton.prototype = {
       if (this.icon_name) {
         this.icon = St.TextureCache.get_default().load_gicon(null, icon, iconSize);
       } else {
-        icon = dir.get_icon() ? dir.get_icon().get_names().toString() : 'error';
+        icon = dir.get_icon() && typeof dir.get_icon().get_names === 'function' ? dir.get_icon().get_names().toString() : 'error';
         this.icon = new St.Icon({
           icon_name: icon,
           icon_size: iconSize
