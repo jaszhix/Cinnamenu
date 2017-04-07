@@ -205,6 +205,7 @@ CinnamenuPanel.prototype = {
         // ISSUE: If height isn't set, then popup menu height will expand when application buttons are added
         let height = this.groupCategoriesWorkspacesScrollBox.height;
         this.applicationsScrollBox.height = height;
+        this.mainBox.show();
       });
     } else {
       this.resetSearch();
@@ -1487,7 +1488,8 @@ CinnamenuPanel.prototype = {
     // mainbox holds the topPane and bottomPane
     this.mainBox = new St.BoxLayout({
       style_class: 'menu-applications-inner-box',
-      vertical: true
+      vertical: true,
+      show_on_set_parent: false
     }); // menu
 
     // Top pane holds user group, view mode, and search (packed horizonally)
