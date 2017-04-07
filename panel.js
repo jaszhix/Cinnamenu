@@ -123,6 +123,7 @@ CinnamenuPanel.prototype = {
     this.recentManager = Gtk.RecentManager.get_default();
     this.placesManager = null;
     this._displayed = false;
+    this.menuHeight = 530;
   },
 
   on_panel_edit_mode_changed: function() {
@@ -141,7 +142,7 @@ CinnamenuPanel.prototype = {
       padding: mainBoxThemeNode.get_padding(St.Side.TOP),
     };
     if (typeof cb === 'function') {
-      Mainloop.idle_add(cb);
+      Mainloop.idle_add_full(Mainloop.PRIORITY_DEFAULT, cb);
     }
   },
 
@@ -158,9 +159,7 @@ CinnamenuPanel.prototype = {
       }
       this.introspectTheme(()=>{
         // Set focus to search entry
-        global.stage.set_key_focus(this.searchEntry);
-
-        this._menuToggleTimeoutId = Mainloop.timeout_add(100, Lang.bind(this, this.resetSearchWithFocus));
+        this.resetSearchWithFocus();
 
         // Load Startup Applications category
         this._selectedItemIndex = null;
@@ -1514,14 +1513,14 @@ CinnamenuPanel.prototype = {
     });
 
     // Allow the menu to be taller for high resolution displays.
-    let menuHeight = Math.round(Main.layoutManager.primaryMonitor.height / 2.055)
-    menuHeight = menuHeight < 530 ? 530 : menuHeight;
+    this.menuHeight = Math.round(Math.abs(Main.layoutManager.primaryMonitor.height / 2.055))
+    this.menuHeight = this.menuHeight < 530 ? 530 : this.menuHeight;
 
     // groupCategoriesWorkspacesScrollBox allows categories or workspaces to scroll vertically
     this.groupCategoriesWorkspacesScrollBox = new St.ScrollView({
       x_fill: true,
       y_fill: false,
-      height: menuHeight,
+      height: this.menuHeight,
       y_align: St.Align.START,
       style_class: 'vfade cinnamenu-categories-workspaces-scrollbox'
     });
@@ -1534,12 +1533,6 @@ CinnamenuPanel.prototype = {
     }));
     this.groupCategoriesWorkspacesScrollBox.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.NEVER);
     this.groupCategoriesWorkspacesScrollBox.set_mouse_scrolling(true);
-    /*this.groupCategoriesWorkspacesScrollBox.connect('button-release-event', Lang.bind(this, function(actor, event) {
-      let button = event.get_button();
-      if (button == 3) { //right click
-        // This was for showing workspace thumbnails, but serves no function on Cinnamon. Whether to use this signal or not TBD.
-      }
-    }));*/
 
     // selectedAppBox
     this.selectedAppBox = new St.BoxLayout({
@@ -1870,6 +1863,7 @@ CinnamenuPanel.prototype = {
       x_fill: true,
       y_fill: false,
       y_align: St.Align.START,
+      height: this.menuHeight,
       style_class: 'vfade menu-applications-scrollbox'
     });
     let vscrollApplications = this.applicationsScrollBox.get_vscroll_bar();
@@ -1937,7 +1931,9 @@ CinnamenuPanel.prototype = {
       x_fill: false,
       y_fill: false,
       x_align: St.Align.START,
-      y_align: St.Align.START
+      y_align: St.Align.START,
+      y_expand: false,
+      expand: false
     });
     this.groupCategoriesWorkspacesScrollBox.add_actor(this.groupCategoriesWorkspacesWrapper);
 
@@ -1991,12 +1987,12 @@ CinnamenuPanel.prototype = {
     this.menu.addMenuItem(this._dummySeparator);
 
     // Set height constraints on scrollboxes (we also set height when menu toggle)
-    /*this.applicationsScrollBox.add_constraint(new Clutter.BindConstraint({
+    this.applicationsScrollBox.add_constraint(new Clutter.BindConstraint({
       name: 'appScrollBoxConstraint',
       source: this.groupCategoriesWorkspacesScrollBox,
       coordinate: Clutter.BindCoordinate.HEIGHT,
       offset: 0
-    }));*/
+    }));
 
     this._widthCategoriesBox = this.categoriesBox.width;
   },
