@@ -92,6 +92,7 @@ CategoryListButton.prototype = {
     let iconSize = _parent._applet.categoryIconSize;
 
     this._dir = dir;
+    this.disabled = false;
     let categoryNameText = '';
     //let categoryIconName = null;
 
@@ -142,6 +143,10 @@ CategoryListButton.prototype = {
   },
 
   handleEnter: function() {
+    if (this.disabled) {
+      return false;
+    }
+
     this.actor.add_style_class_name('menu-category-button-selected');
     this._parent.selectedAppTitle.set_text(this.categoryNameText);
     this._parent.selectedAppDescription.set_text('');
@@ -163,9 +168,23 @@ CategoryListButton.prototype = {
   },
 
   handleButtonRelease: function() {
+    if (this.disabled) {
+      return false;
+    }
+
     this._parent.selectedAppTitle.set_text(this.categoryNameText);
     this._parent.selectedAppDescription.set_text('');
     this._parent._selectCategory(this);
+  },
+
+  disable: function() {
+    this.actor.set_style_class_name('menu-category-button-greyed');
+    this.disabled = true;
+  },
+
+  enable: function () {
+    this.actor.set_style_class_name('menu-category-button');
+    this.disabled = false;
   },
 
   destroy: function(actor) {

@@ -1344,6 +1344,17 @@ CinnamenuPanel.prototype = {
 
   _onSearchTextChanged: function(se, prop) {
     let searchText = this.searchEntry.get_text();
+
+    let categoryChildren = this.categoriesBox.get_children();
+
+    for (let i = 0, len = categoryChildren.length; i < len; i++) {
+      if (searchText.length > 0) {
+        categoryChildren[i]._delegate.disable();
+      } else {
+        categoryChildren[i]._delegate.enable();
+      }
+    }
+
     if (this.searchActive) {
       if (searchText.length === 0) {
         this._resetDisplayApplicationsToStartup();
