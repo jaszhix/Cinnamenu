@@ -3,6 +3,7 @@ const Gtk = imports.gi.Gtk;
 const GLib = imports.gi.GLib;
 const CMenu = imports.gi.CMenu;
 const Clutter = imports.gi.Clutter;
+const Cinnamon = imports.gi.Cinnamon;
 const St = imports.gi.St;
 const Util = imports.misc.util;
 const Main = imports.ui.main;
@@ -10,7 +11,7 @@ const Mainloop = imports.mainloop;
 const Lang = imports.lang;
 const GnomeSession = imports.misc.gnomeSession;
 const ScreenSaver = imports.misc.screenSaver;
-const PanelMenu = imports.ui.panelMenu;
+const Signals = imports.signals;
 const PopupMenu = imports.ui.popupMenu;
 
 const AppletDir = imports.ui.appletManager.applets['Cinnamenu@json'];
@@ -63,12 +64,13 @@ function CinnamenuPanel() {
 }
 
 CinnamenuPanel.prototype = {
-  __proto__: PanelMenu.Button.prototype,
 
   _init: function(applet) {
     this.launcher = {};
-    PanelMenu.Button.prototype._init.call(this, applet.orientation)
 
+    this.actor = new Cinnamon.GenericContainer({
+      style_class: 'panel-button'
+    });
     this._applet = applet;
     this.orientation = applet.orientation;
     this.menu = applet.menu
@@ -2055,3 +2057,4 @@ CinnamenuPanel.prototype = {
     this.appButtons = [];
   },
 };
+Signals.addSignalMethods(CinnamenuPanel.prototype)
