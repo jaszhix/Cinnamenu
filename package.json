@@ -1,6 +1,6 @@
 {
   "name": "Cinnamenu",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Cinnamenu",
   "main": "gulpfile.js",
   "scripts": {
