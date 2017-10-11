@@ -1,18 +1,19 @@
-# Mosaab Alzoubi <moceap@hotmail.com>, 2016.
+# Livedevelop Live User <mortaromarcello@gmail.com>, 2014.
 msgid ""
 msgstr ""
 "Project-Id-Version: Cinnamenu\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-10-08 11:14-0500\n"
-"PO-Revision-Date: 2017-03-22 11:08+0100\n"
-"Last-Translator: Mosaab Alzoubi <moceap@hotmail.com>\n"
-"Language-Team: Arabic <>\n"
-"Language: en_US\n"
+"PO-Revision-Date: 2017-03-22 11:10+0100\n"
+"Last-Translator: Livedevelop Live User <mortaromarcello@gmail.com>\n"
+"Language-Team: \n"
+"Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 1.8.7.1\n"
+"X-Project-Style: gnome\n"
 
 #: buttons.js:313
 msgid "Please provide your password to uninstall this application"
@@ -44,7 +45,7 @@ msgstr ""
 
 #: buttons.js:1162 applet.js:2175
 msgid "List View"
-msgstr "طريقة القائمة"
+msgstr "Vista ad elenco"
 
 #: buttons.js:1163 applet.js:2176
 msgid "Switch to list view"
@@ -52,7 +53,7 @@ msgstr ""
 
 #: buttons.js:1168 applet.js:2175
 msgid "Grid View"
-msgstr "طريقة الشبكة"
+msgstr "Vista griglia"
 
 #: buttons.js:1169 applet.js:2176
 msgid "Switch to grid view"
@@ -72,23 +73,25 @@ msgstr ""
 
 #: applet.js:930
 msgid "All Applications"
-msgstr "كل التطبيقات"
+msgstr "Tutte le applicazioni"
 
 #: applet.js:961
 msgid "Places"
-msgstr "الأماكن"
+msgstr "Posizioni"
 
 #: applet.js:965
 msgid "Recent Files"
-msgstr "الحديثة"
+msgstr "Recenti"
 
 #: applet.js:968
 msgid "Favorite Apps"
-msgstr "التطبيقات المفضلة"
+msgstr ""
 
 #: applet.js:1227
 msgid "gir1.2-gda-5.0 package required for Firefox and Midori bookmarks."
 msgstr ""
+"Il pacchetto gir1.2-gda-5.0 è richiesto per i segnalibri di Firefox e di "
+"Midori."
 
 #: applet.js:1307
 msgid "Clear List"
@@ -100,7 +103,7 @@ msgstr ""
 
 #: applet.js:2064
 msgid "Type to search..."
-msgstr "اكتب لتبحث..."
+msgstr "Ricerca..."
 
 #: applet.js:2168
 msgid "Account details"
@@ -108,7 +111,7 @@ msgstr ""
 
 #: applet.js:2182
 msgid "Lock Screen"
-msgstr "اقفل"
+msgstr "Blocca schermo"
 
 #: applet.js:2183
 msgid "Lock the screen"
@@ -137,15 +140,15 @@ msgstr ""
 
 #: placeDisplay.js:146
 msgid "Home"
-msgstr "المنزل"
+msgstr "Home"
 
 #: placeDisplay.js:220
 msgid "Computer"
-msgstr "الحاسوب"
+msgstr "Computer"
 
 #: placeDisplay.js:224
 msgid "Browse network"
-msgstr "استعرض الشبكة"
+msgstr ""
 
 #. Cinnamenu@json->settings-schema.json->category-click->description
 msgid "Activate categories on click"
@@ -194,7 +197,7 @@ msgstr ""
 #. Cinnamenu@json->settings-schema.json->privacy-settings-button->description
 #, fuzzy
 msgid "Toggle recent files"
-msgstr "الحديثة"
+msgstr "Recenti"
 
 #. Cinnamenu@json->settings-schema.json->privacy-settings-button->tooltip
 msgid "Press this button to customize your privacy settings."
@@ -215,11 +218,11 @@ msgstr ""
 
 #. Cinnamenu@json->settings-schema.json->startup-view-mode->options
 msgid "Grid"
-msgstr "الشبكة"
+msgstr "Grid"
 
 #. Cinnamenu@json->settings-schema.json->startup-view-mode->options
 msgid "List"
-msgstr "القائمة"
+msgstr "List"
 
 #. Cinnamenu@json->settings-schema.json->menu-icon-custom->description
 msgid "Use a custom icon"

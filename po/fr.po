@@ -1,17 +1,15 @@
-# Mosaab Alzoubi <moceap@hotmail.com>, 2016.
 msgid ""
 msgstr ""
 "Project-Id-Version: Cinnamenu\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-10-08 11:14-0500\n"
-"PO-Revision-Date: 2017-03-22 11:08+0100\n"
-"Last-Translator: Mosaab Alzoubi <moceap@hotmail.com>\n"
-"Language-Team: Arabic <>\n"
-"Language: en_US\n"
+"PO-Revision-Date: 2017-03-22 11:09+0100\n"
+"Last-Translator: DAEM Q.\n"
+"Language-Team: \n"
+"Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=n != 1;\n"
 "X-Generator: Poedit 1.8.7.1\n"
 
 #: buttons.js:313
@@ -44,7 +42,7 @@ msgstr ""
 
 #: buttons.js:1162 applet.js:2175
 msgid "List View"
-msgstr "طريقة القائمة"
+msgstr "Vue Liste"
 
 #: buttons.js:1163 applet.js:2176
 msgid "Switch to list view"
@@ -52,7 +50,7 @@ msgstr ""
 
 #: buttons.js:1168 applet.js:2175
 msgid "Grid View"
-msgstr "طريقة الشبكة"
+msgstr "Vue Grille"
 
 #: buttons.js:1169 applet.js:2176
 msgid "Switch to grid view"
@@ -72,35 +70,35 @@ msgstr ""
 
 #: applet.js:930
 msgid "All Applications"
-msgstr "كل التطبيقات"
+msgstr "Toutes les Applications"
 
 #: applet.js:961
 msgid "Places"
-msgstr "الأماكن"
+msgstr "Emplacements"
 
 #: applet.js:965
 msgid "Recent Files"
-msgstr "الحديثة"
+msgstr "Documents récents"
 
 #: applet.js:968
 msgid "Favorite Apps"
-msgstr "التطبيقات المفضلة"
+msgstr "Applications Favorites"
 
 #: applet.js:1227
 msgid "gir1.2-gda-5.0 package required for Firefox and Midori bookmarks."
-msgstr ""
+msgstr "Ensemble gir1.2-gda-5.0 requis pour les favoris Firefox et Midori."
 
 #: applet.js:1307
 msgid "Clear List"
-msgstr ""
+msgstr "Effacer la liste"
 
 #: applet.js:1318
 msgid "No recent documents"
-msgstr ""
+msgstr "Aucun document récent"
 
 #: applet.js:2064
 msgid "Type to search..."
-msgstr "اكتب لتبحث..."
+msgstr "Taper pour rechercher..."
 
 #: applet.js:2168
 msgid "Account details"
@@ -108,7 +106,7 @@ msgstr ""
 
 #: applet.js:2182
 msgid "Lock Screen"
-msgstr "اقفل"
+msgstr "Vérouiller Écran"
 
 #: applet.js:2183
 msgid "Lock the screen"
@@ -137,15 +135,15 @@ msgstr ""
 
 #: placeDisplay.js:146
 msgid "Home"
-msgstr "المنزل"
+msgstr "Dossier Personnel"
 
 #: placeDisplay.js:220
 msgid "Computer"
-msgstr "الحاسوب"
+msgstr "Ordinateur"
 
 #: placeDisplay.js:224
 msgid "Browse network"
-msgstr "استعرض الشبكة"
+msgstr ""
 
 #. Cinnamenu@json->settings-schema.json->category-click->description
 msgid "Activate categories on click"
@@ -170,10 +168,11 @@ msgstr ""
 #. Cinnamenu@json->settings-schema.json->search-filesystem->description
 msgid "Enable filesystem path entry in search box"
 msgstr ""
+"Activer l'entrée du chemin du système de fichier dans la boîte de recherche"
 
 #. Cinnamenu@json->settings-schema.json->search-filesystem->tooltip
 msgid "Allows path entry in the menu search box."
-msgstr ""
+msgstr "Permet la recherche de chemins de fichiers."
 
 #. Cinnamenu@json->settings-schema.json->menu-editor-button->description
 msgid "Open the menu editor"
@@ -194,19 +193,22 @@ msgstr ""
 #. Cinnamenu@json->settings-schema.json->privacy-settings-button->description
 #, fuzzy
 msgid "Toggle recent files"
-msgstr "الحديثة"
+msgstr "Documents récents"
 
 #. Cinnamenu@json->settings-schema.json->privacy-settings-button->tooltip
 msgid "Press this button to customize your privacy settings."
 msgstr ""
 
 #. Cinnamenu@json->settings-schema.json->enable-bookmarks->description
+#, fuzzy
 msgid "Show web bookmarks"
-msgstr ""
+msgstr "Afficher les signets et les emplacements"
 
 #. Cinnamenu@json->settings-schema.json->enable-bookmarks->tooltip
+#, fuzzy
 msgid "Choose whether or not bookmarks are indexed in the menu."
 msgstr ""
+"Choisir d'afficher ou non les favoris et les emplacements dans le menu."
 
 #. Cinnamenu@json->settings-schema.json->startup-view-mode->description
 #. Cinnamenu@json->settings-schema.json->startup-view-mode->tooltip
@@ -215,11 +217,11 @@ msgstr ""
 
 #. Cinnamenu@json->settings-schema.json->startup-view-mode->options
 msgid "Grid"
-msgstr "الشبكة"
+msgstr "Grille"
 
 #. Cinnamenu@json->settings-schema.json->startup-view-mode->options
 msgid "List"
-msgstr "القائمة"
+msgstr "Liste"
 
 #. Cinnamenu@json->settings-schema.json->menu-icon-custom->description
 msgid "Use a custom icon"
@@ -277,8 +279,10 @@ msgid "Enable searching of open windows"
 msgstr ""
 
 #. Cinnamenu@json->settings-schema.json->enable-windows->tooltip
+#, fuzzy
 msgid "Choose whether or not open windows are indexed in menu searches."
 msgstr ""
+"Choisir d'afficher ou non les favoris et les emplacements dans le menu."
 
 #. Cinnamenu@json->settings-schema.json->enable-animation->description
 msgid "Use menu animations"
@@ -290,11 +294,11 @@ msgstr ""
 
 #. Cinnamenu@json->settings-schema.json->show-application-icons->description
 msgid "Show application icons"
-msgstr ""
+msgstr "Afficher les icônes des applications"
 
 #. Cinnamenu@json->settings-schema.json->show-application-icons->tooltip
 msgid "Choose whether or not to show icons on applications."
-msgstr ""
+msgstr "Choisir d'afficher ou non les icônes des applications."
 
 #. Cinnamenu@json->settings-schema.json->overlay-key->description
 msgid "Keyboard shortcut to open and close the menu"
@@ -367,15 +371,16 @@ msgstr ""
 
 #. Cinnamenu@json->settings-schema.json->show-apps-description-on-
 #. buttons->description
+#, fuzzy
 msgid "Show application descriptions under titles"
-msgstr ""
+msgstr "Afficher la description du programme sous son icône"
 
 #. Cinnamenu@json->settings-schema.json->show-apps-description-on-
 #. buttons->tooltip
 msgid ""
 "Choose whether or not to show the application description on the application "
 "buttons."
-msgstr ""
+msgstr "Afficher ou masquer la description du programme sous son icône"
 
 #. Cinnamenu@json->settings-schema.json->menu-label->description
 #. Cinnamenu@json->settings-schema.json->menu-label->tooltip
@@ -396,17 +401,20 @@ msgid "Enable search providers"
 msgstr ""
 
 #. Cinnamenu@json->settings-schema.json->enable-search-providers->tooltip
+#, fuzzy
 msgid ""
 "Choose whether or not search provider results are indexed in menu searches."
 msgstr ""
+"Choisir d'afficher ou non les favoris et les emplacements dans le menu."
 
 #. Cinnamenu@json->settings-schema.json->show-places->description
 msgid "Show bookmarks and places"
-msgstr ""
+msgstr "Afficher les signets et les emplacements"
 
 #. Cinnamenu@json->settings-schema.json->show-places->tooltip
 msgid "Choose whether or not to show bookmarks and places in the menu."
 msgstr ""
+"Choisir d'afficher ou non les favoris et les emplacements dans le menu."
 
 #. Cinnamenu@json->settings-schema.json->apps-grid-icon-size->description
 #. Cinnamenu@json->settings-schema.json->apps-grid-icon-size->tooltip
@@ -423,11 +431,11 @@ msgstr ""
 
 #. Cinnamenu@json->settings-schema.json->show-category-icons->description
 msgid "Show category icons"
-msgstr ""
+msgstr "Afficher les icônes de catégorie"
 
 #. Cinnamenu@json->settings-schema.json->show-category-icons->tooltip
 msgid "Choose whether or not to show icons on categories."
-msgstr ""
+msgstr "Choisir d'afficher ou non les icônes de catégorie."
 
 #. Cinnamenu@json->metadata.json->description
 msgid ""
